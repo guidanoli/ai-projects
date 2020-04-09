@@ -1,5 +1,5 @@
 language: cpp
-os: linux
+os: windows
 install:
     - cmake --version
 script:
@@ -11,7 +11,3 @@ script:
     - ctest -V -C Debug
 after_failure:
     - cat "${TRAVIS_BUILD_DIR}/build/CMakeFiles/CMakeOutput.log"
-matrix:
-  include:
-    - os: linux
-    - os: windows
