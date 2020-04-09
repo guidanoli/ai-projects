@@ -3,9 +3,10 @@
 class Instance
 {
 private:
-	void setName(std::string const& name);
+	Instance() = default;
 private:
 	std::string name;
+	std::string comment;
 
 	friend class InstanceParser;
 };
