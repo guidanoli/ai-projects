@@ -9,10 +9,10 @@ FOREACH(subdir ${SUBDIRS})
 		target_sources("${subdir}lib" PUBLIC "${${subdir}_HEADERS}")
 		target_include_directories("${subdir}lib" PUBLIC
 			"${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/")
-		string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/" ""
-			HEADER_FILES ${${subdir}_HEADERS})
-		FOREACH(HEADER_FILE ${HEADER_FILES})
-			message(STATUS "\t${HEADER_FILE}")
+		FOREACH(HEADER_FILE_PATH ${${subdir}_HEADERS})
+			string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/" ""
+				HEADER_FILE_NAME ${HEADER_FILE_PATH})
+			message(STATUS "\t${HEADER_FILE_NAME}")
 		ENDFOREACH()
 	endif()
 ENDFOREACH()

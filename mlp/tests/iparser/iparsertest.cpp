@@ -9,5 +9,6 @@ int main(void)
 {
 	for (const auto& entry : fs::directory_iterator(DATAPATH)) {
 		auto iparser = InstanceParser::Open(entry.path().string());
+		auto instance = iparser->Parse();
 	}
 }

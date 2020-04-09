@@ -11,10 +11,10 @@ FOREACH(subdir ${SUBDIRS})
 		add_executable("${subdir}app" "${${subdir}_SRC}")
 		set_target_properties("${subdir}app" PROPERTIES
 							  FOLDER applications)
-		string(REPLACE "${subdir}/" ""
-			SOURCE_FILES ${${subdir}_SRC})
-		FOREACH(SOURCE_FILE ${SOURCE_FILES})
-			message(STATUS "\t${SOURCE_FILE}")
+		FOREACH(SOURCE_FILE_PATH ${${subdir}_SRC})
+			string(REPLACE "${subdir}/" ""
+				SOURCE_FILE_NAME ${SOURCE_FILE_PATH})
+			message(STATUS "\t${SOURCE_FILE_NAME}")
 		ENDFOREACH()
 	endif()
 	if (EXISTS "${subdir}/CMakeLists.txt")
