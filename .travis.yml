@@ -1,0 +1,16 @@
+language: cpp
+os: linux
+install:
+    - cmake --version
+script:
+    - mkdir build
+    - cd build
+    - cmake ..
+    - cmake --build .
+    - ctest -V -C Debug
+after_failure:
+    - cat "${TRAVIS_BUILD_DIR}/build/CMakeFiles/CMakeOutput.log"
+matrix:
+  include:
+    - os: linux
+    - os: windows

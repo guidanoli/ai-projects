@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 3.0)
+project(mlp)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+option(BUILD_TESTING "Enable test cases" ON)
+
+if (BUILD_TESTING)
+	enable_testing()
+endif()
+
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
+add_subdirectory("src")
+add_subdirectory("include")
+add_subdirectory("tests")
+add_subdirectory("app")
