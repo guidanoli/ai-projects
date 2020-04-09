@@ -5,12 +5,18 @@ FOREACH(subdir ${SUBDIRS})
 	     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 	     CONFIGURE_DEPENDS
 		 "${subdir}/*.cpp"
-		 "${subdir}/*.hpp")
-	message(STATUS "app/${subdir}:")
-	add_executable("app${subdir}" "${${subdir}_SRC}")
-	set_target_properties("app${subdir}" PROPERTIES
-	                      FOLDER applications)
-	message(STATUS "\t${${subdir}_SRC}")
+		 "${subdir}/*.h")
+	message(STATUS "app/${subdir}/")
+	if (NOT ("${${subdir}_SRC}" STREQUAL ""))
+		add_executable("${subdir}app" "${${subdir}_SRC}")
+		set_target_properties("${subdir}app" PROPERTIES
+							  FOLDER applications)
+		string(REPLACE "${subdir}/" ""
+			SOURCE_FILES ${${subdir}_SRC})
+		FOREACH(SOURCE_FILE ${SOURCE_FILES})
+			message(STATUS "\t${SOURCE_FILE}")
+		ENDFOREACH()
+	endif()
 	if (EXISTS "${subdir}/CMakeLists.txt")
 		add_subdirectory(${subdir})
 	endif()

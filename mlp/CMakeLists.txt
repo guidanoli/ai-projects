@@ -11,6 +11,8 @@ if (BUILD_TESTING)
 	enable_testing()
 endif()
 
+add_definitions(-DDATAPATH="${CMAKE_CURRENT_LIST_DIR}/data")
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")

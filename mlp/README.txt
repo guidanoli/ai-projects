@@ -1,12 +1,11 @@
 Directory Structure
 ===================
 
-./app/
+./app/x/
 	Applications
 	------------
 	Executable source files.
-	Organized in individual folders.
-	Applications are targeted as app*.
+	Applications are targeted as xapp.
 
 ./cmake/
 	CMake files
@@ -18,31 +17,29 @@ Directory Structure
 	----------
 	Files used for storing data only.
 
-./include/
+./include/x/
 	Header files
 	------------
-	Organized in individual folders.
+	Libraries header (.h) files.
 
-./src/
+./src/x/
 	Source files
 	------------
-	Organized in individual folders.
+	Libraries source (.cpp) files.
 
-./tests/
+./tests/x/
 	Tests
 	-----
-	Executable source files.
-	Are meant to test libraries.
-	Organized in individual folders.
-	Tests are targeted as t*.
+	Executable test source files.
+	Tests are targeted as xtest.
 
 Libraries
 =========
 
 A library named x has its source files located at
 src/x/ and its header files at include/x/. It can
-have N test cases, all located at tests/x/.
-Libraries are targeted as lib*.
+have a test executable located at tests/x/.
+Libraries are targeted as xlib.
 
 CMake
 =====
@@ -50,6 +47,40 @@ CMake
 CMake does the magic of globbing to automatically
 create targets for each of the subdirectories.
 But what CMake doesn't do alone is figure out
-dependencies. Therefore, you must include a
-CMakeLists.txt in each subfolder and link the
+dependencies. For that purpose, you can include
+a CMakeLists.txt in a subfolder and link the
 appropriate libraries to your target.
+
+Adding...
+=========
+
+	...a library
+	------------
+	- Create a folder in src/.
+	- There, add at least one source file
+	- All header files must be in a folder
+	  with the same name in include/.
+	- All test source files must be in a
+	  folder with the same name in tests/.
+	- If it depends on any library, create
+	  a CMakeLists.txt file inside and there
+	  link them accordingly.
+
+	...an application
+	-----------------
+	- Create a folder in app/.
+	- There, add at least one source file
+	- If it depends on any library, create
+	  a CMakeLists.txt file inside and there
+	  link them accordingly.
+	
+	...a test
+	---------
+	- Create a folder in tests/ named after
+	  the library you want to test.
+	- There, add at least one source file.
+	- It will be automatically linked to the
+	  library being test. But if there are
+	  any other dependencies, create a
+	  CMakeLists.txt file inside and there
+	  link them accordingly.

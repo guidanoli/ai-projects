@@ -5,12 +5,16 @@ FOREACH(subdir ${SUBDIRS})
 	     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 	     CONFIGURE_DEPENDS
 		 "${subdir}/*.cpp")
-	message(STATUS "lib/${subdir}:")
-	if ("${${subdir}_SRC}")
-		add_library("lib${subdir}" "${${subdir}_SRC}")
-		set_target_properties("lib${subdir}" PROPERTIES
+	message(STATUS "src/${subdir}/")
+	if (NOT ("${${subdir}_SRC}" STREQUAL ""))
+		add_library("${subdir}lib" "${${subdir}_SRC}")
+		set_target_properties("${subdir}lib" PROPERTIES
 							  FOLDER libraries)
-		message(STATUS "\t${${subdir}_SRC}")
+		string(REPLACE "${subdir}/" ""
+			SOURCE_FILES ${${subdir}_SRC})
+		FOREACH(SOURCE_FILE ${SOURCE_FILES})
+			message(STATUS "\t${SOURCE_FILE}")
+		ENDFOREACH()
 	endif()
 	if (EXISTS "${subdir}/CMakeLists.txt")
 		add_subdirectory(${subdir})
