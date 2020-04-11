@@ -6,10 +6,6 @@
 #include <utility>
 #include <regex>
 
-const std::string WHITESPACE = " \n\r\t\f\v";
-
-using MatrixBuilder = bool(*)(std::ifstream&, DMatrixPtr&);
-
 void matrixParsingError(std::size_t i, std::size_t j)
 {
 	std::cerr << "Error on row " << i << ", col" << j << ".\n";
@@ -54,7 +50,8 @@ bool buildUpperRow(std::ifstream& fs, DMatrixPtr& m) {
 	return true;
 };
 
-using LabeledDMatrixBuilder = std::pair<std::string, MatrixBuilder>;
+using LabeledDMatrixBuilder = std::pair<std::string,
+	bool(*)(std::ifstream&, DMatrixPtr&)>;
 
 const std::vector<LabeledDMatrixBuilder> ew_formats = {
 	{ "FULL_MATRIX", buildFullMatrix },
@@ -68,9 +65,7 @@ const std::vector<LabeledDMatrixBuilder> ew_formats = {
 	//"LOWER_DIAG_COL",
 };
 
-//
-// End of accepted field values
-//
+const std::string WHITESPACE = " \n\r\t\f\v";
 
 std::string rtrim(const std::string& s)
 {
@@ -157,17 +152,39 @@ bool InstanceParser::ParseDisplayData(Instance& instance)
 
 	int node;
 	Pos x, y;
+
+	//
+	// Position matrix (2d only)
+	//
 	auto posmatrix = ds::Matrix<Pos>::Get(n, 2);
+
+	//
+	// Visited nodes bitmap
+	//
 	std::vector<bool> visited(n, false);
+
 	for (std::size_t i = 0; i < n; ++i) {
-		fs >> node >> x >> y;
-		node--; // number -> index
+
+		// Read node position
+		if (!(fs >> node >> x >> y)) {
+			std::cerr << "Error parsing node " << node << ".\n";
+			return false;
+		}
+
+		// number -> index
+		node--;
+
+		// Check if node is valid
 		if (node >= n || visited[node]) {
 			std::cerr << "Invalid node in DISPLAY_DATA_SECTION.\n";
 			return false;
 		}
+
+		// Store node position in matrix
 		(*posmatrix)[node][0] = x;
 		(*posmatrix)[node][1] = y;
+		
+		// Mark node as visited
 		visited[node] = true;
 	}
 
@@ -191,14 +208,20 @@ bool InstanceParser::ParseEdgeWeights(Instance& instance)
 	}
 	auto ew_format = *ew_format_opt;
 
+	//
+	// Clear main diagonal
+	//
 	auto dmatrix = ds::SquareMatrix<Dist>::Get(n);
 	for (std::size_t i = 0; i < n; ++i)
-		(*dmatrix)[i][i] = 0; // Clear main diagonal
+		(*dmatrix)[i][i] = 0;
 
 	auto find_format = [ew_format] (LabeledDMatrixBuilder const& opt) {
 		return opt.first == ew_format;
 	};
 
+	//
+	// Find a matching matrix builder by name
+	//
 	auto builder = std::find_if(ew_formats.begin(),
 	                            ew_formats.end(),
 	                            find_format);
@@ -209,7 +232,12 @@ bool InstanceParser::ParseEdgeWeights(Instance& instance)
 		return false;
 	}
 
-	if (!builder->second(fs, dmatrix)) {
+	//
+	// Matrix building function
+	//
+	auto buildfunc = builder->second;
+
+	if (!buildfunc(fs, dmatrix)) {
 		std::cerr << "Error building matrix.\n";
 		return false;
 	}
@@ -232,10 +260,16 @@ bool InstanceParser::ParseData(Instance& instance, std::string key)
 
 std::optional<bool> is_blank(std::string const& s)
 {
+	//
+	// Pattern tha matches only whitespace characters
+	//
 	const std::regex blank_regex("^([" + WHITESPACE + "]*)$");
+
 	std::smatch match;
+
 	try {
-		return (std::regex_search(s, match, blank_regex) && (match.size() > 1));
+		return (std::regex_search(s, match, blank_regex) &&
+		       (match.size() > 1));
 	} catch (std::regex_error& e) {
 		std::cerr << "Regex error: " << e.what() << std::endl;
 		return std::nullopt;
@@ -270,7 +304,7 @@ std::optional<Instance> InstanceParser::Parse()
 	bool parsing_specifications = true;
 
 	//
-	// Regex that matches specification entries
+	// Pattern that matches specification entries
 	// Group 1: Entry key
 	// Group 2: Comma separator
 	// Group 3: Entry value
