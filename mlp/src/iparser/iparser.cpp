@@ -282,7 +282,7 @@ std::optional<Instance> InstanceParser::Parse()
 	// Check if the file is open
 	//
 	if (!fs.is_open()) {
-		std::cerr << "File not open!\n";
+		std::cerr << "Could not open file!\n";
 		return std::nullopt;
 	}
 
