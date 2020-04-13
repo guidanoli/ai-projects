@@ -36,8 +36,9 @@ Directory Structure
 ./vis/x/
 	Graphical applications
 	----------------------
-	Executable for visualizing data.
-	Similar to 'app'.
+	Source files for executables with some
+	graphical interface.
+	These are targeted as xvis.
 
 Libraries
 =========
