@@ -9,6 +9,7 @@ FOREACH(subdir ${SUBDIRS})
 	message(STATUS "vis/${subdir}/")
 	if (NOT ("${${subdir}_SRC}" STREQUAL ""))
 		add_executable("${subdir}vis" "${${subdir}_SRC}")
+		link_libraries("${subdir}vis" OpenGL GLU)
 		set_target_properties("${subdir}vis" PROPERTIES
 							  FOLDER "graphic applications")
 		FOREACH(SOURCE_FILE_PATH ${${subdir}_SRC})

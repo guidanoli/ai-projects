@@ -33,6 +33,12 @@ Directory Structure
 	Executable test source files.
 	Tests are targeted as xtest.
 
+./vis/x/
+	Graphical applications
+	----------------------
+	Executable for visualizing data.
+	Similar to 'app'.
+
 Libraries
 =========
 
@@ -81,6 +87,16 @@ Adding...
 	- There, add at least one source file.
 	- It will be automatically linked to the
 	  library being test. But if there are
+	  any other dependencies, create a
+	  CMakeLists.txt file inside and there
+	  link them accordingly.
+
+	...a graphical application
+	--------------------------
+	- Create a folder in vis/.
+	- There, add at least one source file
+	- It will be automatically linked to the
+	  graphics libraries. But if there are
 	  any other dependencies, create a
 	  CMakeLists.txt file inside and there
 	  link them accordingly.
