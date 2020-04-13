@@ -45,5 +45,6 @@ private:
 	}
 private:
 	std::ifstream fs;
+	std::string filename;
 	std::map<std::string, VarMapValueType> entry_map;
 };

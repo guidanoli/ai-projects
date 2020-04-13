@@ -5,7 +5,6 @@
 #include <GL/gl.h>
 #include <GL/glut.h>
 
-#include <algorithm>
 #include <iostream>
 #include <string>
 #include <memory>
@@ -46,14 +45,14 @@ public:
 	double frame = 0;
 
 	void project() {
-		auto matrix = instance_ptr->getPosMatrix();
-		Pos first_x = (*matrix)[0][0],
-			first_y = (*matrix)[0][1];
+		auto matrix = *(instance_ptr->GetPositionMatrix());
+		Pos first_x = matrix[0][0],
+			first_y = matrix[0][1];
 		min_x = max_x = first_x;
 		min_y = max_y = first_y;
-		for (std::size_t i = 0; i < matrix->getm(); ++i) {
-			Pos x = (*matrix)[i][0],
-				y = (*matrix)[i][1];
+		for (std::size_t i = 0; i < matrix.getm(); ++i) {
+			Pos x = matrix[i][0],
+				y = matrix[i][1];
 			min_x = min(x, min_x);
 			max_x = max(x, max_x);
 			min_y = min(y, min_y);
@@ -69,12 +68,12 @@ public:
 	}
 
 	void plot() {
-		auto matrix = instance_ptr->getPosMatrix();
+		auto matrix = *(instance_ptr->GetPositionMatrix());
 		glColor3f(dot_r, dot_g, dot_b);
 		glPointSize(dotsize);
 		glBegin(GL_POINTS);
-		for (std::size_t i = 0; i < matrix->getm(); ++i) {
-			Pos x = (*matrix)[i][0], y = (*matrix)[i][1];
+		for (std::size_t i = 0; i < matrix.getm(); ++i) {
+			Pos x = matrix[i][0], y = matrix[i][1];
 			glVertex2f((float) x, (float) y);
 		}
 		glEnd();
@@ -116,12 +115,12 @@ int main(int argc, char** argv)
 	std::cout << "OK\n";
 	options.instance_ptr = *instance_opt;
 	
-	if (!options.instance_ptr->getPosMatrix()) {
+	if (!options.instance_ptr->GetPositionMatrix()) {
 		std::cerr << "No position matrix.\n";
 		return 1;
 	}
 
-	if (options.instance_ptr->getPosMatrix()->getn() != 2) {
+	if (options.instance_ptr->GetPositionMatrix()->getn() != 2) {
 		std::cerr << "Can't plot 3d points.\n";
 		return 1;
 	}
@@ -130,7 +129,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
 	glutInitWindowSize(640, 640);
 	glutInitWindowPosition(10, 10);
-	glutCreateWindow(options.instance_ptr->getName().c_str());
+	glutCreateWindow(options.instance_ptr->GetName().c_str());
 	glutDisplayFunc(display);
 	options.project();
 	glutMainLoop();

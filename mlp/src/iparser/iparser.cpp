@@ -6,24 +6,26 @@
 #include <utility>
 #include <regex>
 
+#include "ds.h"
+
 void matrixParsingError(std::size_t i, std::size_t j)
 {
 	std::cerr << "Error on row " << i << ", col" << j << ".\n";
 }
 
-bool buildFullMatrix(std::ifstream& fs, DMatrixPtr &m) {
-	auto n = m->size();
+bool buildFullMatrix(std::ifstream& fs, ds::SquareMatrix<Dist>& m) {
+	auto n = m.size();
 	for (std::size_t i = 0; i < n; ++i)
 		for (std::size_t j = 0; j < n; ++j)
-			if (!(fs >> (*m)[i][j])) {
+			if (!(fs >> m[i][j])) {
 				matrixParsingError(i,j);
 				return false;
 			}
 	return true;
 };
 
-bool buildLowDiagRow(std::ifstream& fs, DMatrixPtr &m) {
-	auto n = m->size();
+bool buildLowDiagRow(std::ifstream& fs, ds::SquareMatrix<Dist>& m) {
+	auto n = m.size();
 	for (std::size_t i = 0; i < n; ++i)
 		for (std::size_t j = 0; j <= i; ++j) {
 			Dist dij;
@@ -31,13 +33,13 @@ bool buildLowDiagRow(std::ifstream& fs, DMatrixPtr &m) {
 				matrixParsingError(i, j);
 				return false;
 			}
-			(*m)[i][j] = (*m)[j][i] = dij;
+			m[i][j] = m[j][i] = dij;
 		}
 	return true;
 };
 
-bool buildUpperRow(std::ifstream& fs, DMatrixPtr& m) {
-	auto n = m->size();
+bool buildUpperRow(std::ifstream& fs, ds::SquareMatrix<Dist>& m) {
+	auto n = m.size();
 	for (std::size_t i = 0; i < n; ++i)
 		for (std::size_t j = i + 1; j < n; ++j) {
 			Dist dij;
@@ -45,13 +47,13 @@ bool buildUpperRow(std::ifstream& fs, DMatrixPtr& m) {
 				matrixParsingError(i, j);
 				return false;
 			}
-			(*m)[i][j] = (*m)[j][i] = dij;
+			m[i][j] = m[j][i] = dij;
 		}
 	return true;
 };
 
 using LabeledDMatrixBuilder = std::pair<std::string,
-	bool(*)(std::ifstream&, DMatrixPtr&)>;
+	bool(*)(std::ifstream&, ds::SquareMatrix<Dist>&)>;
 
 const std::vector<LabeledDMatrixBuilder> ew_formats = {
 	{ "FULL_MATRIX", buildFullMatrix },
@@ -78,7 +80,8 @@ SharedInstanceParser InstanceParser::Open(std::string const& filename)
 	return std::shared_ptr<InstanceParser>(new InstanceParser(filename));
 }
 
-InstanceParser::InstanceParser(std::string const& filename)
+InstanceParser::InstanceParser(std::string const& filename) :
+	filename(filename)
 {
 	fs.open(filename, std::ios::in);
 }
@@ -238,7 +241,7 @@ bool InstanceParser::ParseEdgeWeights(SharedInstance& instance)
 	//
 	auto buildfunc = builder->second;
 
-	if (!buildfunc(fs, dmatrix)) {
+	if (!buildfunc(fs, *dmatrix)) {
 		std::cerr << "Error building matrix.\n";
 		return false;
 	}
@@ -283,7 +286,7 @@ std::optional<SharedInstance> InstanceParser::Parse()
 	// Check if the file is open
 	//
 	if (!fs.is_open()) {
-		std::cerr << "Could not open file!\n";
+		std::cerr << "Could not open file \"" + filename + "\"!\n";
 		return std::nullopt;
 	}
 
@@ -394,6 +397,8 @@ std::optional<SharedInstance> InstanceParser::Parse()
 		std::cerr << "Distance matrix not defined.\n";
 		return std::nullopt;
 	}
+
+	instance_ptr->filepath = filename;
 
 	return instance_ptr;
 

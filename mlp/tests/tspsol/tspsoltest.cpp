@@ -1,7 +1,9 @@
 #include <filesystem>
 #include <iostream>
+#include <vector>
 
 #include "iparser.h"
+#include "solution.h"
 
 namespace fs = std::filesystem;
 
@@ -18,7 +20,13 @@ int main(void)
 		assert(instance_ptr_opt);
 		auto instance_ptr = *instance_ptr_opt;
 		assert(instance_ptr);
-		assert(instance_ptr->GetDistanceMatrix().getm() > 0);
-		assert(instance_ptr->GetSourceFilePath() == path);
+		auto solution = Solution(instance_ptr);
+		auto n = instance_ptr->GetDistanceMatrix().getm();
+		assert(solution.size() == n);
+		std::vector<bool> node_set(n, false);
+		for (auto node : solution) {
+			assert(!node_set[node]);
+			node_set[node] = true;
+		}
 	}
 }

@@ -5,23 +5,23 @@
 #include "ds.h"
 #include "defines.h"
 
-using DMatrixPtr = std::shared_ptr<ds::SquareMatrix<Dist>>;
-using PosMatrixPtr = std::shared_ptr<ds::Matrix<Pos>>;
-
 class Instance
 {
 public:
-	std::string const& getName() const { return name; }
-	std::string const& getComment() const { return comment; }
-	DMatrixPtr const& getDMatrix() const { return dmatrix; }
-	PosMatrixPtr const& getPosMatrix() const { return posmatrix; }
+	std::string const& GetName () const { return name; }
+	std::string const& GetComment () const { return comment; }
+	std::string const& GetSourceFilePath() const { return filepath; }
+	ds::SquareMatrix<Dist> const& GetDistanceMatrix () const { return *dmatrix; }
+	Dist const* operator[] (std::size_t i) const { return (*dmatrix)[i]; }
+	std::shared_ptr<ds::Matrix<Pos> const> GetPositionMatrix() const { return posmatrix; }
 private:
 	Instance() = default;
 private:
 	std::string name;
 	std::string comment;
-	DMatrixPtr dmatrix;
-	PosMatrixPtr posmatrix;
+	std::string filepath;
+	std::shared_ptr<ds::SquareMatrix<Dist>> dmatrix;
+	std::shared_ptr<ds::Matrix<Pos>> posmatrix;
 
 	friend class InstanceParser;
 };
