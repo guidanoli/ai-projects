@@ -11,26 +11,26 @@ MLP Solver application
 ======================
 
 --ifile
-	MLP instance filename.
+	TSP instance filename.
 	default: "brazil58.tsp"
 )";
 
-struct mlp
+struct options_t
 {
 	std::string ifile;
 };
 
-static mlp args;
+static options_t options;
 
 int main(int argc, char** argv)
 {
-	arg::parse(argc, argv, args, help)
-		.bind("ifile", &mlp::ifile, arg::def("brazil58.tsp"));
+	arg::parse(argc, argv, options, help)
+		.bind("ifile", &options_t::ifile, arg::def("brazil58.tsp"));
 
-	std::string ifilepath = std::string(DATAPATH) + "/" + args.ifile;
+	std::string ifilepath = std::string(DATAPATH) + "/" + options.ifile;
 	auto iparser = InstanceParser::Open(ifilepath);
 
-	std::cout << "Parsing instance " << args.ifile << "... ";
+	std::cout << "Parsing instance " << options.ifile << "... ";
 	auto instance_opt = iparser->Parse();
 
 	if (!instance_opt)

@@ -10,6 +10,7 @@
 #include "defines.h"
 #include "instance.h"
 
+using SharedInstance = std::shared_ptr<Instance>;
 using SharedInstanceParser = std::shared_ptr<InstanceParser>;
 using VarMapValueType = std::variant<std::string, int, double>;
 using MapEntry = std::pair<std::string, std::string>;
@@ -20,16 +21,16 @@ class InstanceParser
 {
 public:
 	static SharedInstanceParser Open(std::string const& filename);
-	std::optional<Instance> Parse();
+	std::optional<SharedInstance> Parse();
 	~InstanceParser();
 private:
 	InstanceParser(std::string const& filename);
 
-	bool ParseSpecification(Instance& instance, MapEntry entry);
-	bool ParseData(Instance& instance, std::string key);
+	bool ParseSpecification(SharedInstance& instance, MapEntry entry);
+	bool ParseData(SharedInstance& instance, std::string key);
 
-	bool ParseDisplayData(Instance& instance);
-	bool ParseEdgeWeights(Instance& instance);
+	bool ParseDisplayData(SharedInstance& instance);
+	bool ParseEdgeWeights(SharedInstance& instance);
 
 	template<typename T>
 	std::optional<T> GetEntryValue(std::string key) {

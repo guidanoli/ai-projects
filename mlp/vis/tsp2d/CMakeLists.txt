@@ -1,0 +1,2 @@
+target_link_libraries(tsp2dvis iparserlib argparserlib)
+link_libraries(tsp2dvis OpenGL GLU)

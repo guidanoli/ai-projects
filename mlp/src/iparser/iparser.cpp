@@ -89,17 +89,18 @@ InstanceParser::~InstanceParser()
 		fs.close();
 }
 
-bool InstanceParser::ParseSpecification(Instance& instance, MapEntry entry)
+bool InstanceParser::ParseSpecification(SharedInstance& instance,
+                                        MapEntry entry)
 {
 	auto& [key, value] = entry;
 	VarMapValueType entry_map_value = value;
 	if (key == "NAME") {
-		instance.name = value;
+		instance->name = value;
 	} else if (key == "TYPE") {
 		if (value != "TSP")
 			goto invalid_value;
 	} else if (key == "COMMENT") {
-		instance.comment = value;
+		instance->comment = value;
 	} else if (key == "DIMENSION") {
 		int n = stoi(value);
 		if (n <= 0)
@@ -129,7 +130,7 @@ invalid_value:
 	return false;
 }
 
-bool InstanceParser::ParseDisplayData(Instance& instance)
+bool InstanceParser::ParseDisplayData(SharedInstance& instance)
 {
 	auto n_opt = GetEntryValue<int>("DIMENSION");
 	if (!n_opt) {
@@ -188,11 +189,11 @@ bool InstanceParser::ParseDisplayData(Instance& instance)
 		visited[node] = true;
 	}
 
-	instance.posmatrix = posmatrix;
+	instance->posmatrix = posmatrix;
 	return true;
 }
 
-bool InstanceParser::ParseEdgeWeights(Instance& instance)
+bool InstanceParser::ParseEdgeWeights(SharedInstance& instance)
 {
 	auto n_opt = GetEntryValue<int>("DIMENSION");
 	if (!n_opt) {
@@ -242,11 +243,11 @@ bool InstanceParser::ParseEdgeWeights(Instance& instance)
 		return false;
 	}
 
-	instance.dmatrix = dmatrix;
+	instance->dmatrix = dmatrix;
 	return true;
 }
 
-bool InstanceParser::ParseData(Instance& instance, std::string key)
+bool InstanceParser::ParseData(SharedInstance& instance, std::string key)
 {
 	if (key == "DISPLAY_DATA_SECTION") {
 		return ParseDisplayData(instance);
@@ -276,7 +277,7 @@ std::optional<bool> is_blank(std::string const& s)
 	}
 }
 
-std::optional<Instance> InstanceParser::Parse()
+std::optional<SharedInstance> InstanceParser::Parse()
 {
 	//
 	// Check if the file is open
@@ -289,7 +290,7 @@ std::optional<Instance> InstanceParser::Parse()
 	//
 	// Deserialized instance
 	//
-	Instance instance;
+	auto instance_ptr = std::shared_ptr<Instance>(new Instance());
 
 	//
 	// Current line
@@ -356,7 +357,7 @@ std::optional<Instance> InstanceParser::Parse()
 					// Matched data section entry
 					//
 					parsing_specifications = false;
-					if (!ParseData(instance, key)) {
+					if (!ParseData(instance_ptr, key)) {
 						std::cerr << "Error parsing data.\n";
 						goto parsing_error;
 					}
@@ -366,7 +367,7 @@ std::optional<Instance> InstanceParser::Parse()
 					// Matched specification entry
 					//
 					auto entry = std::make_pair(key, value);
-					if (!ParseSpecification(instance, entry)) {
+					if (!ParseSpecification(instance_ptr, entry)) {
 						std::cerr << "Error parsing specification.\n";
 						goto parsing_error;
 					}
@@ -389,12 +390,12 @@ std::optional<Instance> InstanceParser::Parse()
 	// In a ill-formed file, a distance matrix might
 	// not have been defined.
 	//
-	if (!instance.dmatrix) {
+	if (!instance_ptr->dmatrix) {
 		std::cerr << "Distance matrix not defined.\n";
 		return std::nullopt;
 	}
 
-	return instance;
+	return instance_ptr;
 
 parsing_error:
 	std::cerr << "Last entry parsed: \"" << line << "\".\n";
