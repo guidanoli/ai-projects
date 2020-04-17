@@ -48,6 +48,10 @@ src/x/ and its header files at include/x/. It can
 have a test executable located at tests/x/.
 Libraries are targeted as xlib.
 
+Each library should contain a README file to
+document the code. Documenting in the code is
+discouraged.
+
 CMake
 =====
 
