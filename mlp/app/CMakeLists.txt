@@ -17,7 +17,11 @@ FOREACH(subdir ${SUBDIRS})
 			message(STATUS "\t${SOURCE_FILE_NAME}")
 		ENDFOREACH()
 	endif()
-	if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/CMakeLists.txt")
+	file (GLOB_RECURSE "${subdir}_CMAKELIST"
+		  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+	      CONFIGURE_DEPENDS
+		  "${subdir}/CMakeLists.txt")
+	if (NOT ("${${subdir}_CMAKELIST}" STREQUAL ""))
 		add_subdirectory(${subdir})
 	endif()
 ENDFOREACH()

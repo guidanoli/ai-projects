@@ -87,6 +87,9 @@ int main(int argc, char** argv)
 			return 1;
 	}
 
+	auto cost = solution.GetCost();
+	std::cout << "Initial cost: " << cost << std::endl;
+
 	if (options.does_save) {
 		std::string savepath = std::string(DATAPATH) + "/" + options.savefile;
 		std::ofstream ofs(savepath, std::ios::out);

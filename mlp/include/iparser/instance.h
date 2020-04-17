@@ -12,6 +12,7 @@ public:
 	std::string const& GetComment () const { return comment; }
 	std::string const& GetSourceFilePath() const { return filepath; }
 	ds::SquareMatrix<Dist> const& GetDistanceMatrix () const { return *dmatrix; }
+	std::size_t GetSize () const { return dmatrix->getm(); }
 	Dist const* operator[] (std::size_t i) const { return (*dmatrix)[i]; }
 	std::shared_ptr<ds::Matrix<Pos> const> GetPositionMatrix() const { return posmatrix; }
 private:

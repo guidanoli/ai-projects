@@ -317,7 +317,7 @@ std::optional<SharedInstance> InstanceParser::Parse()
 	// that the entry is no longer for specification
 	// and it precedes serialized data.
 	//
-	const std::regex entry_key_regex("([a-zA-Z0-9_]+)(: )?[ \t]*(.*)");
+	const std::regex entry_key_regex("([a-zA-Z0-9_]+)[ \t]*(:)?[ \t]*(.*)");
 
 	while(true) {
 

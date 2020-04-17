@@ -2,12 +2,13 @@
 #include "iparser.h"
 
 #include <iostream>
+#include <iterator>
 #include <vector>
 
 Solution::Solution (std::shared_ptr<Instance> instance_ptr) :
 	instance_ptr(instance_ptr)
 {
-	std::size_t n = instance_ptr->GetDistanceMatrix().getm();
+	std::size_t n = instance_ptr->GetSize();
 	for (std::size_t i = 0; i < n; ++i)
 		push_back(i);
 }
@@ -40,7 +41,7 @@ std::ifstream& operator>>(std::ifstream& ifs, Solution& s)
 		return ifs; // Logic error
 	}
 	s.instance_ptr = *instance_ptr_opt;
-	auto n = (*instance_ptr_opt)->GetDistanceMatrix().getm();
+	auto n = (*instance_ptr_opt)->GetSize();
 	std::vector<bool> added_nodes(n, false);
 	for (std::size_t i = 0; i < n; ++i) {
 		std::size_t nodei;
@@ -61,4 +62,18 @@ std::ifstream& operator>>(std::ifstream& ifs, Solution& s)
 	return ifs; // Ok
 }
 
-Instance const& Solution::GetInstance () { return *instance_ptr; }
+int Solution::GetCost ()
+{
+	int cost = 0;
+	auto it = begin(), previous = begin();
+	while (it != end()) {
+		if (it != previous)
+			cost += (*instance_ptr)[*it][*previous];
+		previous = it;
+		++it;
+	}
+	cost += (*instance_ptr)[*previous][front()];
+	return cost;
+}
+
+std::shared_ptr<Instance> Solution::GetInstance () { return instance_ptr; }
