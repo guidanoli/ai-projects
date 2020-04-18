@@ -9,7 +9,6 @@ Character flags (cf)
 The keyword is a 1-byte long string, or, in other words, a
 single charecter. If present, its value is true. e.g.:
 
-::
   -h
     ...sets "h" to true
   -abc
@@ -21,7 +20,6 @@ Multi-character flags (mcf)
 The keyword is a non-empty string. If present, its value is
 equal to true. e.g.:
 
-::
   --help
     ...sets "help" to true
   --v
@@ -35,11 +33,10 @@ The keyword is a non-empty string. Following is an equal
 sign (=), and the flag value, which is also a non-empty
 string. e.g.:
 
-::
-  --verbosity=HIGH
-    ...sets "verbosity" to "HIGH"
-  --dir="C:/Program Files/"
-    ...sets "dir" to "C:/Program Files/"
+  --verbose=y
+    ...sets "verbose" to "y"
+  --dir=mydir
+    ...sets "dir" to "mydir"
 
 Features
 =======
@@ -55,6 +52,7 @@ in a class. Suppose you are parsing a class for your new
 should parse a string an integer for the number of times.
 
 .. code-block:: cpp
+
    struct repeat_t {
      std::string s;
 	 unsigned long long t = 0;
@@ -63,6 +61,7 @@ should parse a string an integer for the number of times.
 Your help string is something like that:
 
 .. code-block:: cpp
+
    const char help[] = "Repeat me!\n\n"
    "Arguments:\n"
    "--string=<your string here>\n"
@@ -71,6 +70,7 @@ Your help string is something like that:
 Then, what your parser code would look like is this:
 
 .. code-block:: cpp
+
    repeat_t repeat;
    arg::parse(argc, argv, repeat, help)
      .bind("string", &repeat::s, arg::def("foo"))
@@ -86,10 +86,8 @@ As seen on the previous example, we have defined a help
 string for ill formed arguments. That means that if we
 were to type a negative number for '--times', we should
 get the help string to the screen. The program would
-also be aborted immediately after.
-
-.. warning::
-   If a help string is missing, an exception is thrown.
+also be aborted immediately after. If a help string is
+missing, an exception is thrown.
    
 Expandable argument deserialization
 -----------------------------------
