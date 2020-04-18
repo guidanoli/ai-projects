@@ -55,17 +55,14 @@ should parse a string an integer for the number of times.
 
    struct repeat_t {
      std::string s;
-	 unsigned long long t = 0;
+     unsigned long long t = 0;
    }
 
 Your help string is something like that:
 
 .. code-block:: cpp
 
-   const char help[] = "Repeat me!\n\n"
-   "Arguments:\n"
-   "--string=<your string here>\n"
-   "--times=<integer>\n"
+   const char help[] = "Repeat me!\n\n";
 
 Then, what your parser code would look like is this:
 
@@ -73,8 +70,12 @@ Then, what your parser code would look like is this:
 
    repeat_t repeat;
    arg::parse(argc, argv, repeat, help)
-     .bind("string", &repeat::s, arg::def("foo"))
-     .bind("times", &repeat::t, arg::def(3))
+     .bind("string", &repeat::s,
+           arg::doc("The string to be repeated"),
+	   arg::def("foo"))
+     .bind("times", &repeat::t,
+           arg::doc("How many times your string will be repeated"),
+	   arg::def(3));
 
 That means that, by default, your program gets to repeat
 "foo" 3 times. Isn't that neat and easy?
@@ -84,10 +85,9 @@ Support for help strings in case of ill-formed arguments
 
 As seen on the previous example, we have defined a help
 string for ill formed arguments. That means that if we
-were to type a negative number for '--times', we should
-get the help string to the screen. The program would
-also be aborted immediately after. If a help string is
-missing, an exception is thrown.
+were to give the '--help' parameter, we should get the
+help string to the screen. The program would also be
+aborted immediately after.
    
 Expandable argument deserialization
 -----------------------------------
