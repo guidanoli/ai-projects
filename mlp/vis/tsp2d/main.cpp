@@ -55,7 +55,6 @@ public:
 	std::string sfile;
 	Solution solution;
 	SharedInstance instance_ptr;
-	bool plot_solution = false;
 	float dotsize = 0;
 	float dot_r = 0, dot_g = 0, dot_b = 0;
 	float line_r = 0, line_g = 0, line_b = 0;
@@ -91,13 +90,11 @@ public:
 	void plot() {
 		auto matrix = instance_ptr->GetPositionMatrix();
 		auto n = matrix->getm();
-		if (plot_solution) {
-			glColor3f(line_r, line_g, line_b);
-			glBegin(GL_LINE_LOOP);
-			for (auto node_i : solution)
-				NODE_VERTEX2F(matrix, node_i);
-			glEnd();
-		}
+		glColor3f(line_r, line_g, line_b);
+		glBegin(GL_LINE_LOOP);
+		for (auto node_i : solution)
+			NODE_VERTEX2F(matrix, node_i);
+		glEnd();
 		glColor3f(dot_r, dot_g, dot_b);
 		glBegin(GL_POINTS);
 		for (std::size_t i = 0; i < n; ++i)
@@ -133,9 +130,7 @@ int main(int argc, char** argv)
 		.bind("line-b", &options_t::line_b, arg::def(1.f))
 		.bind("frame", &options_t::frame, arg::def(0.1));
 
-	options.plot_solution = !options.sfile.empty();
-
-	if (!options.plot_solution) {
+	if (options.sfile.empty()) {
 		std::string ifilepath = std::string(DATAPATH) + "/" + options.ifile;
 		auto iparser = InstanceParser::Open(ifilepath);
 
@@ -147,6 +142,7 @@ int main(int argc, char** argv)
 
 		std::cout << "OK\n";
 		options.instance_ptr = *instance_opt;
+		options.solution = Solution(options.instance_ptr);
 	} else {
 		std::cout << "Parsing solution " << options.sfile << "... ";
 

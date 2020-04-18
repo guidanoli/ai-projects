@@ -6,7 +6,12 @@ visualizer for tsp instances. Some instances files include
 the node coordinates, which is what is essentially what is
 being plotted on-screen.
 
+Tested instances
+----------------
+
+See images in this very directory.
+
 Future additions
 ----------------
 
-* Visualize solutions and local searches iteractively
+* Visualize local searches iteractively
