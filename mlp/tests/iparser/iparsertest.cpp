@@ -1,7 +1,7 @@
 #include <filesystem>
 #include <iostream>
 
-#include "bks.h"
+#include "bksparser.h"
 #include "iparser.h"
 #include "solution.h"
 
@@ -9,7 +9,7 @@ namespace fs = std::filesystem;
 
 int main(void)
 {
-	auto bks_instance = BKS::getInstance();
+	auto bks_instance = BKSParser::getInstance();
 
 	for (const auto& entry : fs::directory_iterator(DATAPATH)) {
 		auto path = entry.path();
@@ -36,16 +36,14 @@ int main(void)
 			assert(!node_set[node]);
 			node_set[node] = true;
 		}
-		int scost = solution.GetCost();
-		assert(scost > 0);
 
-		// Test getting BKS
-		std::string instance_name = path.stem().string();
-		auto bks_opt = bks_instance->getInstanceBKS(instance_name);
-		assert(bks_opt);
-		auto bks = *bks_opt;
-		assert(solution.GetCost() >= bks);
-		float ratio = 1 - ((float) scost / (float) bks);
-		std::cout << " (" << ratio * 100 << "% gap)\n";
+		// Test cost and gap
+		Cost scost = solution.GetCost();
+		assert(scost > 0);
+		auto gap_opt = solution.GetCostGap();
+		assert(gap_opt);
+		auto gap = *gap_opt;
+		assert(gap <= (CostGap) 0);
+		std::cout << " (" << gap * 100 << "% gap)\n";
 	}
 }

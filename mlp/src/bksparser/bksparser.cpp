@@ -1,13 +1,13 @@
-#include "bks.h"
+#include "bksparser.h"
 
 #include <stdexcept>
 #include <regex>
 #include <fstream>
 
-std::map<std::string, int> BKS::bks_map;
-std::shared_ptr<BKS> BKS::instance = std::shared_ptr<BKS>(new BKS());
+std::map<std::string, Cost> BKSParser::bks_map;
+std::shared_ptr<BKSParser> BKSParser::instance = std::shared_ptr<BKSParser>(new BKSParser());
 
-BKS::BKS()
+BKSParser::BKSParser()
 {
 	std::string bksfile = std::string(DATAPATH) + "/bks.txt";
 	std::ifstream fs;
@@ -17,13 +17,13 @@ BKS::BKS()
 	std::string line;
 	int line_cnt = 1;
 	while (std::getline(fs, line)) {
-		const std::regex rgx("([^ \t]+)[ \t]*:[ \t]*(\\d+)");
+		const std::regex rgx("([^ \t]+)[ \t]+(\\d+)");
 		std::smatch match;
 		if (std::regex_match(line, match, rgx) &&
 			match.size() > 2) {
 			std::string name = match[1];
 			std::string bks_str = match[2];
-			int bks = stoi(bks_str);
+			Cost bks = stoull(bks_str); // Hard-coded (string to ull)
 			bks_map.insert(std::make_pair(name, bks));
 		} else {
 			throw std::runtime_error("Ill-formed line " + line_cnt);
@@ -32,12 +32,12 @@ BKS::BKS()
 	}
 }
 
-std::shared_ptr<BKS> BKS::getInstance()
+std::shared_ptr<BKSParser> BKSParser::getInstance()
 {
 	return instance;
 }
 
-std::optional<int> BKS::getInstanceBKS(std::string name)
+std::optional<Cost> BKSParser::getInstanceBKS(std::string name)
 {
 	auto entry = bks_map.find(name);
 	if (entry == bks_map.end())

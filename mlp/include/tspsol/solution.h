@@ -1,15 +1,23 @@
 #pragma once
-#include "instance.h"
+
 #include <fstream>
 #include <list>
 #include <memory>
+#include <optional>
+
+#include "instance.h"
+#include "bksparser.h"
+
+using CostGap = double;
+
 class Solution : public std::list<std::size_t>
 {
 public:
 	Solution() = default;
 	Solution (std::shared_ptr<Instance> instance_ptr);
 	std::shared_ptr<Instance> GetInstance ();
-	int GetCost ();
+	std::optional<CostGap> GetCostGap();
+	Cost GetCost ();
 
 	// (de)serialization functions
 	// check for std::(i|o)fstream::good.

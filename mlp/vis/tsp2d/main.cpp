@@ -82,13 +82,13 @@ public:
 			max_x + dx * frame / 2,
 			min_y - dy * frame / 2,
 			max_y + dy * frame / 2);
+		glPointSize(dotsize);
 	}
 
 #define NODE_VERTEX2F(matrix, i) \
 	glVertex2f((float) (*matrix)[i][0], (float) (*matrix)[i][1])
 
 	void plot() {
-		glPointSize(dotsize);
 		auto matrix = instance_ptr->GetPositionMatrix();
 		auto n = matrix->getm();
 		if (plot_solution) {
@@ -99,10 +99,9 @@ public:
 			glEnd();
 		}
 		glColor3f(dot_r, dot_g, dot_b);
-		glPointSize(dotsize);
 		glBegin(GL_POINTS);
-		for (std::size_t i = 1; i < n; ++i)
-			NODE_VERTEX2F(matrix, i);
+		for (std::size_t i = 0; i < n; ++i)
+			NODE_VERTEX2F(matrix, i); // customers
 		glEnd();
 	}
 private:
@@ -125,7 +124,7 @@ int main(int argc, char** argv)
 	arg::parse(argc, argv, options, help)
 		.bind("ifile", &options_t::ifile, arg::def("dantzig42.tsp"))
 		.bind("sfile", &options_t::sfile, arg::def(""))
-		.bind("dotsize", &options_t::dotsize, arg::def(2.0f))
+		.bind("dotsize", &options_t::dotsize, arg::def(5.0f))
 		.bind("dot-r", &options_t::dot_r, arg::def(0.89f))
 		.bind("dot-g", &options_t::dot_g, arg::def(0.09f))
 		.bind("dot-b", &options_t::dot_b, arg::def(0.05f))
@@ -158,6 +157,11 @@ int main(int argc, char** argv)
 			std::cout << "OK\n";
 		else
 			return 1;
+
+		auto gap_opt = options.solution.GetCostGap();
+
+		if (gap_opt)
+			std::cout << "Gap = " << *gap_opt * 100 << "%\n";
 
 		options.instance_ptr = options.solution.GetInstance();
 	}

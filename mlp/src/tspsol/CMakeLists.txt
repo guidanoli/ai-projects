@@ -1,1 +1,1 @@
-target_link_libraries(tspsollib iparserlib)
+target_link_libraries(tspsollib iparserlib bksparserlib)

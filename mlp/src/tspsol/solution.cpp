@@ -62,18 +62,46 @@ std::ifstream& operator>>(std::ifstream& ifs, Solution& s)
 	return ifs; // Ok
 }
 
-int Solution::GetCost ()
+/*
+* Cost is given by the sum of the delays for each customer
+* The delay of the i-th customer is given by Eq. #1.
+*
+*	dist_i = sum(D[vj][vj-1],vj=v0..vi)                 (1)
+* 
+* Where... D is the distance matrix
+*      ... vk is the k-th vertex from the depot, v0
+* 
+* Therefore, the cost is given by Eq. #2.
+*
+*	cost = sum(dist_i,i=0..N-1)                         (2)
+*
+* Where... N is the number of vertices
+*/
+Cost Solution::GetCost ()
 {
-	int cost = 0;
-	auto it = begin(), previous = begin();
+	Cost total = 0; // Total distance
+	Cost dist = 0;  // Distance of current vertex to first vertex
+	auto it = begin(), prev = begin(); // Iterators
 	while (it != end()) {
-		if (it != previous)
-			cost += (*instance_ptr)[*it][*previous];
-		previous = it;
+		if (it != prev) {
+			dist += (*instance_ptr)[*it][*prev];
+			total += dist;
+		}
+		prev = it;
 		++it;
 	}
-	cost += (*instance_ptr)[*previous][front()];
-	return cost;
+	dist += (*instance_ptr)[*prev][front()];
+	total += dist;
+	return total;
+}
+
+std::optional<CostGap> Solution::GetCostGap ()
+{
+	auto bksparser_ptr = BKSParser::getInstance();
+	auto bks_opt = bksparser_ptr->getInstanceBKS(instance_ptr->GetName());
+	if (!bks_opt) return std::nullopt;
+	auto bks = *bks_opt;
+	return (CostGap) (1) - (CostGap) (GetCost()) / (CostGap) (bks);
 }
 
 std::shared_ptr<Instance> Solution::GetInstance () { return instance_ptr; }
