@@ -1,1 +1,1 @@
-target_link_libraries(iparsertest bksparserlib tspsollib)
+target_link_libraries(iparsertest bksparserlib tspsollib argparserlib)

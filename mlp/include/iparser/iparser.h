@@ -22,7 +22,6 @@ class InstanceParser
 public:
 	static SharedInstanceParser Open(std::string const& filename);
 	std::optional<SharedInstance> Parse();
-	~InstanceParser();
 private:
 	InstanceParser(std::string const& filename);
 

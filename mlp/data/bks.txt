@@ -3,3 +3,4 @@ dantzig42	12528
 gr48	102378
 gr120	363454
 pa561.tsp	658870
+square 100

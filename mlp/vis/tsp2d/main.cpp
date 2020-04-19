@@ -18,34 +18,9 @@ namespace arg = argparser;
 const char help[] = R"(
 TSP instance 2d plotter
 =======================
-
 By default, the application displays a 2d plot of the instance whose file name
 is pased by the 'ifile' argument. But, if 'sfile' is specified, then it plots
 the instance overlayed by the solution's route.
-
---sfile
-	TSP solution filename
-	default: not defined
-
---ifile
-	TSP instance filename.
-	default: "dantzig42.tsp"
-
---dotsize
-	Size in pixels of each customer
-	default: 2.0f
-
---dot-r, dot-g, dot-b
-	Dot RGB values, respectively
-	default: 0.89f, 0.09f, 0.05f
-
---line-r, line-g, line-b
-	Line RGB values, respectively
-	default: 1.f, 1.f, 1.f
-
---frame
-	Frame surrounding points (%)
-	default: 0.1
 )";
 
 class options_t
@@ -93,11 +68,13 @@ public:
 		glColor3f(line_r, line_g, line_b);
 		glBegin(GL_LINE_LOOP);
 		for (auto node_i : solution)
-			NODE_VERTEX2F(matrix, node_i);
+			NODE_VERTEX2F(matrix, node_i); // routes
 		glEnd();
-		glColor3f(dot_r, dot_g, dot_b);
 		glBegin(GL_POINTS);
-		for (std::size_t i = 0; i < n; ++i)
+		glColor3f(1.f - dot_r, 1.f - dot_g, 1.f - dot_b);
+		NODE_VERTEX2F(matrix, 0); // depot
+		glColor3f(dot_r, dot_g, dot_b);
+		for (std::size_t i = 1; i < n; ++i)
 			NODE_VERTEX2F(matrix, i); // customers
 		glEnd();
 	}
@@ -118,17 +95,48 @@ void display()
 
 int main(int argc, char** argv)
 {
-	arg::parse(argc, argv, options, help)
-		.bind("ifile", &options_t::ifile, arg::def("dantzig42.tsp"))
-		.bind("sfile", &options_t::sfile, arg::def(""))
-		.bind("dotsize", &options_t::dotsize, arg::def(5.0f))
-		.bind("dot-r", &options_t::dot_r, arg::def(0.89f))
-		.bind("dot-g", &options_t::dot_g, arg::def(0.09f))
-		.bind("dot-b", &options_t::dot_b, arg::def(0.05f))
-		.bind("line-r", &options_t::line_r, arg::def(1.f))
-		.bind("line-g", &options_t::line_g, arg::def(1.f))
-		.bind("line-b", &options_t::line_b, arg::def(1.f))
-		.bind("frame", &options_t::frame, arg::def(0.1));
+	arg::build_parser(argc, argv, options, help)
+
+		.bind("ifile", &options_t::ifile,
+			arg::doc("TSP instance file"),
+			arg::def("dantzig42.tsp"))
+
+		.bind("sfile", &options_t::sfile, 
+			arg::doc("TSP solution file"))
+
+		.bind("dotsize", &options_t::dotsize,
+			arg::doc("Vertex dot size"),
+			arg::def(5.0f))
+
+		.bind("dot-r", &options_t::dot_r,
+			arg::doc("Vertex dot colour red channel"),
+			arg::def(0.89f))
+
+		.bind("dot-g", &options_t::dot_g,
+			arg::doc("Vertex dot colour green channel"),
+			arg::def(0.09f))
+
+		.bind("dot-b", &options_t::dot_b,
+			arg::doc("Vertex dot colour blue channel"),
+			arg::def(0.05f))
+
+		.bind("line-r", &options_t::line_r,
+			arg::doc("Route colour red channel"),
+			arg::def(1.f))
+
+		.bind("line-g", &options_t::line_g,
+			arg::doc("Route colour green channel"),
+			arg::def(1.f))
+
+		.bind("line-b", &options_t::line_b,
+			arg::doc("Route colour blue channel"),
+			arg::def(1.f))
+
+		.bind("frame", &options_t::frame,
+			arg::doc("% of screen left blank for framing plot"),
+			arg::def(0.1))
+		
+		.abort_on("help");
 
 	if (options.sfile.empty()) {
 		std::string ifilepath = std::string(DATAPATH) + "/" + options.ifile;
@@ -168,7 +176,7 @@ int main(int argc, char** argv)
 	}
 
 	if (options.instance_ptr->GetPositionMatrix()->getn() != 2) {
-		std::cerr << "Can't plot 3d points.\n";
+		std::cerr << "Can only plot 2d.\n";
 		return 1;
 	}
 

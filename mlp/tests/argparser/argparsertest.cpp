@@ -198,7 +198,7 @@ int main(int argc, char** argv)
 			auto args_ptr = argv_t::init(input);
 
 			A obj;
-			parse(argn, args_ptr->get(), obj)
+			build_parser(argn, args_ptr->get(), obj)
 				.bind("a",    &A::a)
 				.bind("b",    &A::b)
 				.bind("c",    &A::c)
@@ -223,7 +223,7 @@ int main(int argc, char** argv)
 			auto args_ptr = argv_t::init(input);
 
 			B obj;
-			parse(argn, args_ptr->get(), obj)
+			build_parser(argn, args_ptr->get(), obj)
 				.bind("pi",     &B::f)
 				.bind("e",      &B::d)
 				.bind("answer", &B::i)
@@ -251,7 +251,7 @@ int main(int argc, char** argv)
 			B object;
 			
 			auto args =
-				parse(argc, argv, object)
+				build_parser(argc, argv, object)
 				.bind("f",   &B::f,   def(3.141592f))
 				.bind("d",   &B::d,   def(2.71828182845904))
 				.bind("i",   &B::i,   def(42))

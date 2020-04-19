@@ -86,12 +86,6 @@ InstanceParser::InstanceParser(std::string const& filename) :
 	fs.open(filename, std::ios::in);
 }
 
-InstanceParser::~InstanceParser()
-{
-	if (fs.is_open())
-		fs.close();
-}
-
 bool InstanceParser::ParseSpecification(SharedInstance& instance,
                                         MapEntry entry)
 {
