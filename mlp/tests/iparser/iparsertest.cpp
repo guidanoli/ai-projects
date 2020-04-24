@@ -34,11 +34,12 @@ struct options_t
 		// Test creating solution
 		auto solution = Solution(instance_ptr);
 		auto n = instance_ptr->GetSize();
-		assert(solution.size() == n - 1);
 		std::vector<bool> node_set(n - 1, false);
-		for (auto node : solution) {
-			assert(node > 0 && node < n);
+		for (std::size_t node = 1; node < n; ++node) {
 			assert(!node_set[node - 1]);
+			auto node_index = solution.GetIndexOf(node);
+			assert(node_index < solution.size());
+			assert(solution.Get(node_index) == node);
 			node_set[node - 1] = true;
 		}
 
@@ -54,56 +55,65 @@ struct options_t
 
 		// Interact with solution
 		if (interact) {
-			bool again = false;
-			do {
+			while(true) {
 				std::cout << "Options:\n"
 					<< "\t0 - end\n"
 					<< "\t1 - shift\n"
+					<< "\t2 - swap\n"
 					<< ">>> ";
 
 				int opt;
 				std::cin >> opt;
 
-				if (opt != 0) {
-					int i, j;
-					bool must_improve;
-					dump(solution);
+				if (opt == 0)
+					break;
 
-					std::cout << "n = " << solution.size() << std::endl;
-					std::cout << "i = ";
-					std::cin >> i;
-					std::cout << "j = ";
-					std::cin >> j;
-					std::cout << "must improve = ";
-					std::cin >> must_improve;
-					bool applied;
+				int i, j;
+				bool must_improve;
+				dump(solution);
+				
+				std::cout << "i = ";
+				std::cin >> i;
+				std::cout << "j = ";
+				std::cin >> j;
+				std::cout << "Must improve? ";
+				std::cin >> must_improve;
+				bool applied;
 
-					switch (opt) {
-					case 1:
-						applied = solution.Shift(i, j, must_improve);
-						break;
-					default:
-						std::cerr << "Invalid option\n";
-						return;
-					}
-
-					std::cout << (applied ? "" : "not ") << "applied\n";
-					dump(solution);
-
-					std::cout << "do again? ";
-					std::cin >> again;
+				switch (opt) {
+				case 1:
+					applied = solution.Shift(i, j, must_improve);
+					break;
+				case 2:
+					applied = solution.Swap(i, j, must_improve);
+					break;
+				default:
+					std::cerr << "Invalid option\n";
+					return;
 				}
-			} while (again);
+
+				std::cout << ">>> " << (applied ? "" : "not ") << "applied\n\n";
+				if (applied)
+					dump(solution);
+			}
 		}
 	}
 
 	void dump(Solution const& solution)
 	{
-		std::cout << "[ ";
+		std::cout << "--------------------\n";
+		std::cout << "Order = [ ";
 		for (auto const& node : solution)
 			std::cout << node << " ";
 		std::cout << "]\n";
+		auto n = solution.size();
+		std::cout << "Size = " << n << std::endl;
 		std::cout << "Cost = " << solution.GetCost() << std::endl;
+		std::cout << "Latencies = [ ";
+		for (std::size_t i = 0; i < n; ++i)
+			std::cout << solution.GetLatencyAt(i) << " ";
+		std::cout << "]\n";
+		std::cout << "--------------------\n\n";
 	}
 };
 
@@ -120,7 +130,7 @@ int main(int argc, char **argv)
 		.bind("ifile", &options_t::ifile,
 			arg::doc("Input file"))
 
-		.abort_on("help");
+		.build();
 
 	auto bks_instance = BKSParser::getInstance();
 

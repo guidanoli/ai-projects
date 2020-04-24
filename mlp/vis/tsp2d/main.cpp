@@ -66,7 +66,7 @@ public:
 		auto matrix = instance_ptr->GetPositionMatrix();
 		auto n = matrix->getm();
 		glColor3f(line_r, line_g, line_b);
-		glBegin(GL_LINE_LOOP);
+		glBegin(GL_LINE_STRIP);
 		for (auto node_i : solution)
 			NODE_VERTEX2F(matrix, node_i); // routes
 		glEnd();
@@ -136,7 +136,7 @@ int main(int argc, char** argv)
 			arg::doc("% of screen left blank for framing plot"),
 			arg::def(0.1))
 		
-		.abort_on("help");
+		.build();
 
 	if (options.sfile.empty()) {
 		std::string ifilepath = std::string(DATAPATH) + "/" + options.ifile;

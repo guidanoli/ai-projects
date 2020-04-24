@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <map>
+#include <set>
 #include <optional>
 #include <string>
 #include <sstream>
@@ -14,10 +15,12 @@ namespace argparser
 	{
 	public:
 		arglist(int argc, char** argv);
-		const std::string operator[](const std::string key) const;
+		const std::string operator[](const std::string key);
+		const std::set<std::string> get_unmatched() const;
 	private:
 		bool match_argument(std::string name);
 	private:
+		std::set<std::string> unmatched;
 		std::map<std::string, std::string> map;
 	};
 
@@ -61,9 +64,12 @@ namespace argparser
 				std::cerr << helpstr << std::endl;
 		}
 
-		parser& abort_on(const std::string name) {
-			if (!list[name].empty())
+		parser& build() {
+			if (!list["help"].empty())
 				exit(0);
+			for (auto const& unmatched : list.get_unmatched())
+				std::cout << "Unmatched argument '" << unmatched << "'\n";
+
 			return *this;
 		}
 

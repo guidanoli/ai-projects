@@ -5,7 +5,7 @@
 #include <memory>
 #include <optional>
 
-using Cost = unsigned long long;
+using Cost = long long;
 
 class BKSParser
 {

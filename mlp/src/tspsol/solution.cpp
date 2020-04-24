@@ -1,24 +1,64 @@
 #include "solution.h"
 #include "iparser.h"
 
+#include <cassert>
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <vector>
 
 Solution::Solution (Solution const& solution) :
 	std::list<std::size_t>(solution),
-	dist_map(solution.dist_map),
+	latency_map(solution.latency_map),
 	instance_ptr(solution.instance_ptr)
 {}
 
-Solution::Solution (std::shared_ptr<Instance> instance_ptr) :
+Solution::Solution (std::shared_ptr<Instance> instance_ptr, bool greedy) :
 	instance_ptr(instance_ptr)
 {
 	std::size_t n = instance_ptr->GetSize();
-	for (std::size_t i = 1; i < n; ++i)
-		push_back(i);
-	recalculateDistanceMap(0);
+	if (greedy) {
+		std::vector<bool> added_clients(n, false);
+		Node node = 0;
+		push_back(0); // initial depot
+		auto const& gammaset = instance_ptr->GetGammaSet();
+		constexpr Dist max_dist = std::numeric_limits<Dist>::max();
+		for (std::size_t i = 1; i < n; ++i) {
+			auto const& neighbours = gammaset->getClosestNeighbours(node);
+			Node closest_node = node;
+			added_clients[node] = true;
+			bool found_closest = false;
+			for (auto const& neighbour : neighbours) {
+				if (!added_clients[neighbour]) {
+					closest_node = neighbour;
+					found_closest = true;
+					break;
+				}
+			}
+			if (!found_closest) {
+				Dist min_dist = max_dist;
+				for (Node j = 1; j < n; ++j) {
+					if (!added_clients[j]) {
+						Dist dist = (*instance_ptr)[node][j];
+						if (dist < min_dist) {
+							closest_node = j;
+							min_dist = dist;
+							found_closest = true;
+						}
+					}
+				}
+			}
+			assert(found_closest);
+			push_back(closest_node);
+			node = closest_node;
+		}
+		push_back(0); // final depot
+	} else {
+		for (std::size_t i = 0; i <= n; ++i)
+			push_back(i % n);
+	}
+	recalculateLatencyMap();
 }
 
 std::size_t Solution::GetIndexOf (Node node) const
@@ -28,68 +68,39 @@ std::size_t Solution::GetIndexOf (Node node) const
 	return std::distance(begin(), it);
 }
 
-// Assumes pos is valid (between 0 and N-1)
-// Remember: the depot is throught to be the N-1-th node
-Cost Solution::GetDistanceFromDepot(std::size_t pos) const
+// l(S,0) = 0
+// l(S,1) = d(s_0,s_1)
+// l(S,i) = d(s_{i-1},s_i) + l(S,i-1), i <= n
+void Solution::recalculateLatencyMap(std::size_t pos)
 {
-	return dist_map.find(pos)->second;
-}
+	Cost latency = 0;
+	auto it = begin(),
+		 prev = begin();
 
-Dist Solution::GetDistFromDepot(Node node) const
-{
-	return GetDist(0, node);
-}
+	std::advance(it, pos);
 
-void Solution::recalculateDistanceMap(std::size_t start)
-{
-	Cost total = 0;
-	Cost dist = 0;
-	std::size_t pos = start;
-	auto it = begin(), prev = begin();
-
-	// accum_dist(0) = dist(0,depot)
-	// accum_dist(i) = dist(i,i-1) + accum_dist(i-1)
-
-	std::advance(it, start);
-
-	for (std::size_t i = 0; i < start; ++i)
-		total += GetDistanceFromDepot(i);
-
-	if (start > 0) {
-		std::advance(prev, start - 1);
-		dist = GetDistanceFromDepot(start - 1);
+	if (pos > 1) {
+		std::advance(prev, pos - 1);
+		latency = latency_map.at(pos - 1);
 	}
 
 	while (it != end()) {
-		if (it == prev) {
-			// First node
-			dist += GetDistFromDepot(*it);
-		} else {
-			// Not the first node
-			dist += GetDist(*prev, *it);
-		}
-
-		total += dist;
-
-		dist_map[pos] = total;
-
+		if (it != prev)
+			latency += GetDist(*prev, *it);
+		latency_map[pos] = latency;
 		prev = it;
 		++it;
 		++pos;
 	}
-
-	dist += GetDistFromDepot(*prev);
-	total += dist;
-
-	dist_map[GetDepotIndex()] = total;
 }
 
 std::ofstream& operator<< (std::ofstream& ofs, Solution const& s)
 {
 	if (!ofs) return ofs;
 	ofs << s.GetInstance()->GetSourceFilePath() << std::endl;
-	for (auto node : s)
-		ofs << node << std::endl;
+	auto it = s.begin(), back = s.end();
+	for (++it, --back; it != back; ++it)
+		ofs << *it << std::endl;
 	return ofs;
 }
 
@@ -112,6 +123,7 @@ std::ifstream& operator>> (std::ifstream& ifs, Solution& s)
 		return ifs; // Logic error
 	}
 	s.instance_ptr = *instance_ptr_opt;
+	s.push_back(0); // initial depot
 	auto n = (*instance_ptr_opt)->GetSize();
 	std::vector<bool> added_nodes(n - 1, false);
 	for (std::size_t i = 1; i < n; ++i) {
@@ -130,37 +142,39 @@ std::ifstream& operator>> (std::ifstream& ifs, Solution& s)
 		s.push_back(nodei);
 		added_nodes[nodei - 1] = true;
 	}
-	s.recalculateDistanceMap(0);
+	s.push_back(0); // final depot
+	s.recalculateLatencyMap();
 	return ifs; // Ok
-}
-
-// Depot is not a node in this interpretation
-std::size_t Solution::GetDepotIndex() const
-{
-	return size();
 }
 
 Cost Solution::GetCost () const
 {
-	return GetDistanceFromDepot(GetDepotIndex());
+	Cost cost = 0;
+	auto n = instance_ptr->GetSize();
+	for (std::size_t i = 1; i <= n; ++i)
+		cost += latency_map.at(i);
+	return cost;
 }
 
-std::optional<CostGap> Solution::GetCostGap () const
+std::optional<double> Solution::GetCostGap () const
 {
 	auto bksparser_ptr = BKSParser::getInstance();
 	auto bks_opt = bksparser_ptr->getInstanceBKS(instance_ptr->GetName());
 	if (!bks_opt) return std::nullopt;
 	auto bks = *bks_opt;
-	return (CostGap) (1) - (CostGap) (GetCost()) / (CostGap) (bks);
+	return (double) (1) - (double) (GetCost()) / (double) (bks);
 }
 
 Node Solution::Get (std::size_t index) const
 {
-	if (index >= size())
-		return 0; // depot
 	auto it = begin();
 	std::advance(it, index);
 	return *it;
+}
+
+Cost Solution::GetLatencyAt(std::size_t index) const
+{
+	return latency_map.at(index);
 }
 
 Dist Solution::GetDist(Node i, Node j) const
@@ -173,104 +187,123 @@ std::shared_ptr<Instance> Solution::GetInstance ()  const
 	return instance_ptr;
 }
 
-bool Solution::Shift (std::size_t p, std::size_t q, bool must_improve)
+bool Solution::IsValid() const
 {
-	auto n = size();
+	if (!instance_ptr) {
+		std::cerr << "Instance has null instance pointer\n";
+		return false;
+	}
 
-	/* p and q must be different -> size >= 2
-	*  if only p and q are present, shift is useless -> size >= 3
-	*/
+	auto n = instance_ptr->GetSize();
+
+	if (size() != n + 1) {
+		std::cerr << "Instance does not have the right number of nodes\n";
+		return false;
+	}
+	if (size() < 2) {
+		std::cerr << "Instance does not have both depots.\n";
+		return false;
+	}
+	if (front() != 0) {
+		std::cerr << "First node isn't depot.\n";
+		return false;
+	}
+	if (back() != 0) {
+		std::cerr << "Final node isn't depot.\n";
+		return false;
+	}
+	if (latency_map.size() != n + 1) {
+		std::cerr << "Not all nodes have their latency mapped.\n";
+		return false;
+	}
+
+	std::vector<bool> node_set(n, false);
+	auto end_it = end();
+	--end_it; // ignores last depot
+	for (auto it = begin(); it != end_it; ++it) {
+		if (node_set[*it]) {
+			auto pos = std::distance(begin(), it);
+			std::cerr << "Repeated node " << *it <<
+				" at position " << pos << "\n";
+			return false;
+		}
+		node_set[*it] = true;
+	}
+
+	return true;
+}
+
+bool Solution::Shift (std::size_t p, std::size_t q, bool improve)
+{
+	auto n = instance_ptr->GetSize();
+
+	/* p != q */
 	if (n < 3) return false;
 
 	/* Filtering arbitrary input
-	* such that 0 >= p < q > size */
-	p %= n;
-	q %= n;
+	* such that 0 < p < q < n */
+	p = (p % (n - 1)) + 1;
+	q = (q % (n - 1)) + 1;
 	if (p == q) return false;
 
-	Dist delta;
 	Node np = Get(p), nq = Get(q);
 
-	if (p < q) {
+	if (improve) {
 
-		/*
-		* Calculating the delta of route cost by the following expression
-		*
-		* BEFORE
-		* ... -- x -- p -- y -- ... -- q -- w -- ...
-		*
-		* AFTER
-		* ... -- x -- y -- ... -- q -- p -- w -- ...
-		*
-		* delta = dxy + dqp + dpw - dxp - dpy - dqw
-		* if p and q are neighbours, y === q
-		* There is improvement iff delta < 0
-		*/
+		Cost delta = 0;
 
-		Node nx = Get(p - 1), ny = Get(p + 1), nw = Get(q + 1);
+		if (p < q) {
 
-		Dist dxy = GetDist(nx, ny), dqp = GetDist(nq, np),
-			 dpw = GetDist(np, nw), dxp = GetDist(nx, np),
-			 dpy = GetDist(np, ny), dqw = GetDist(nq, nw);
+			/*
+			* BEFORE
+			* ... -- x -- p -- y -- ... -- q -- w -- ...
+			*
+			* AFTER
+			* ... -- x -- y -- ... -- q -- p -- w -- ...
+			*/
 
-		delta = dxy + dqp + dpw - dxp - dpy - dqw;
+			Node nx = Get(p - 1), ny = Get(p + 1), nw = Get(q + 1);
 
-		// Move schematics
+			Cost dxy = GetDist(nx, ny), dqp = GetDist(nq, np),
+				dpw = GetDist(np, nw), dxp = GetDist(nx, np),
+				dpy = GetDist(np, ny), dqw = GetDist(nq, nw);
 
-		// ... -- x -- p -- y -- ... -- q -- w -- ...
-		//             ^                ^
-		//             p                q
+			delta = (n - p + 1) * (dxy - dxp)
+				+ (n - q) * (dpw - dqw)
+				+ (n - q + 1) * dqp
+				+ latency_map[q]
+				- latency_map[p + 1]
+				- (n - p) * dpy;
+
+		} else {
+
+			/*
+			* BEFORE
+			* ... -- x -- q -- ... -- y -- p -- w -- ...
+			*
+			* AFTER
+			* ... -- x -- p -- q -- ... -- y -- w -- ...
+			*/
+
+			Node nx = Get(q - 1), ny = Get(p - 1), nw = Get(p + 1);
+
+			Cost dxp = GetDist(nx, np), dpq = GetDist(np, nq),
+				dyw = GetDist(ny, nw), dxq = GetDist(nx, nq),
+				dyp = GetDist(ny, np), dpw = GetDist(np, nw);
+
+			delta = (n - q + 1) * (dxp - dxq)
+				+ (n - p) * (dyw - dpw)
+				+ (n - q) * dpq
+				+ latency_map[q]
+				- latency_map[p - 1]
+				- (n - p + 1) * dyp;
+
+		}
 		
-		// ... -- x -- y -- ... -- q -- w -- ...
-		//             ^                ^
-		//             p                q
-
-		// ... -- x -- y -- ... -- q -- p -- w -- ...
-		//             ^                ^
-		//             p                q
-
-	} else {
-
-		/*
-		* Calculating the delta of route cost by the following expression
-		*
-		* BEFORE
-		* ... -- x -- q -- ... -- y -- p -- w -- ...
-		*
-		* AFTER
-		* ... -- x -- p -- q -- ... -- y -- w -- ...
-		*
-		* delta = dxp + dpq + dyw - dxq - dyp - dpw
-		* if p and q are neighbours, y === q
-		* There is improvement iff delta < 0
-		*/
-
-		Node nx = Get(q - 1), ny = Get(p - 1), nw = Get(p + 1);
-
-		Dist dxp = GetDist(nx, np), dpq = GetDist(np, nq),
-			 dyw = GetDist(ny, nw), dxq = GetDist(nx, nq),
-			 dyp = GetDist(ny, np), dpw = GetDist(np, nw);
-
-		delta = dxp + dpq + dyw - dxq - dyp - dpw;
-
-		// Move schematics
-
-		// ... -- x -- q -- ... -- y -- p -- w -- ...
-		//             ^                ^
-		//             q                p
-
-		// ... -- x -- q -- ... -- y -- w -- ...
-		//             ^                ^
-		//             q                p
-
-		// ... -- x -- p -- q -- ... -- y -- w -- ...
-		//             ^                ^
-		//             q                p
+		/* Does not accept solution of same cost */
+		if (delta >= 0) return false;
 
 	}
-
-	/* Does not accept solution of same cost */
-	if (delta >= 0 && must_improve) return false;
 
 	/* Apply move */
 	remove(np);
@@ -279,8 +312,65 @@ bool Solution::Shift (std::size_t p, std::size_t q, bool must_improve)
 	insert(it, np);
 
 	/* Update distance map */
-	auto start = std::min(p, q);
-	recalculateDistanceMap(start);
+	recalculateLatencyMap(std::min(p, q));
+
+	return true;
+}
+
+bool Solution::Swap(std::size_t p, std::size_t q, bool improve)
+{
+	auto n = instance_ptr->GetSize();
+
+	/* p != q */
+	if (n < 3) return false;
+
+	/* Filtering arbitrary input
+	* such that 0 < p < q < n */
+	p = (p % (n - 1)) + 1;
+	q = (q % (n - 1)) + 1;
+	if (p == q) return false;
+	if (p > q) std::swap(p, q);
+
+	/* The same as shift(p,q) */
+	if (q == p + 1) return false;
+
+	if (improve) {
+
+		/*
+		* BEFORE
+		* ... -- x -- p -- y -- ... -- z -- q -- w -- ...
+		*
+		* AFTER
+		* ... -- x -- q -- y -- ... -- z -- p -- w -- ...
+		*/
+
+		Node np = Get(p), nq = Get(q),
+			nx = Get(p - 1), ny = Get(p + 1),
+			nz = Get(q - 1), nw = Get(q + 1);
+
+		Cost dxq = GetDist(nx, nq), dqy = GetDist(nq, ny),
+			dzp = GetDist(nz, np), dpw = GetDist(np, nw),
+			dxp = GetDist(nx, np), dpy = GetDist(np, ny),
+			dzq = GetDist(nz, nq), dqw = GetDist(nq, nw);
+
+		Cost delta = (n - p + 1) * (dxq - dxp)
+			+ (n - p) * (dqy - dpy)
+			+ (n - q + 1) * (dzp - dzq)
+			+ (n - q) * (dpw - dqw);
+
+		/* Does not accept solution of same cost */
+		if (delta >= 0) return false;
+
+	}
+
+	/* Apply move */
+	auto p_it = begin(), q_it = begin();
+	std::advance(p_it, p);
+	std::advance(q_it, q);
+	std::swap(*p_it, *q_it);
+
+	/* Update distance map */
+	recalculateLatencyMap(p);
 
 	return true;
 }

@@ -9,21 +9,24 @@
 #include "instance.h"
 #include "bksparser.h"
 
-using CostGap = double;
-using Node = std::size_t;
-
+// A solution is represented by a sequence of nodes
+// <s0, s1, ..., sn-1, sn>
+//
+// - n is the dimension of the distance matrix
+// - s0 and sn are both the depot.
+// - s1 and sn-1 are distinct clients
 class Solution : public std::list<Node>
 {
 public:
 	Solution (Solution const& solution);
-	Solution (std::shared_ptr<Instance> instance_ptr);
+	Solution (std::shared_ptr<Instance> instance_ptr, bool greedy = true);
 	std::shared_ptr<Instance> GetInstance () const;
-	std::optional<CostGap> GetCostGap () const;
+	std::optional<double> GetCostGap () const;
 
 	Node Get (std::size_t index) const;
 	std::size_t GetIndexOf (Node node) const;
-	Dist GetDist(Node i, Node j) const;
-	Dist GetDistFromDepot(Node node) const;
+	Cost GetLatencyAt (std::size_t index) const;
+	Dist GetDist (Node i, Node j) const;
 	Cost GetCost () const;
 
 	// (de)serialization functions
@@ -37,11 +40,12 @@ public:
 	bool Swap (std::size_t p, std::size_t q, bool improve);
 	bool Opt2 (std::size_t p, std::size_t q, bool improve);
 	bool Shift2 (std::size_t p, std::size_t q, std::size_t z, bool improve);
+
+	// for debugging
+	bool IsValid () const;
 private:
-	std::size_t GetDepotIndex() const;
-	Cost GetDistanceFromDepot(std::size_t pos) const;
-	void recalculateDistanceMap(std::size_t start);
+	void recalculateLatencyMap(std::size_t start = 0);
 private:
-	std::map<std::size_t, Cost> dist_map;
+	std::map<std::size_t, Cost> latency_map;
 	std::shared_ptr<Instance> instance_ptr;
 };
