@@ -49,7 +49,7 @@ struct options_t
 		auto gap_opt = solution.GetCostGap();
 		if (gap_opt) {
 			auto gap = *gap_opt;
-			assert(gap <= (CostGap) 0);
+			assert(gap <= 0);
 			std::cout << " (" << gap * 100 << "% gap)\n";
 		}
 
