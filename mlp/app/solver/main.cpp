@@ -204,7 +204,8 @@ int main(int argc, char** argv)
 			if (options.gammak)
 				instance_ptr->SetK(options.gammak);
 			Solution solution(instance_ptr);
-			options.savefilename = instance_path + ".sol";
+			auto instance_filename = fs::path(instance_path).filename();
+			options.savefilename = instance_filename.string() + ".sol";
 			options.solve(solution);
 			std::cout << std::endl;
 		}

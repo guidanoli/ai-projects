@@ -11,14 +11,14 @@ int LocalSearch::findLocalMinimum(Solution& solution)
 {
 	int improvementCount = 0;
 	int neighbourhood_level = 0;
-	const int neighbourhood_level_cnt = 2;
+	const int neighbourhood_level_cnt = 3;
 
 	// Do a bit of preprocessing
 	auto n = solution.GetInstance()->GetSize();
 	auto gammaset = solution.GetInstance()->GetGammaSet();
 	auto k = gammaset->getK();
-	std::vector<Node> ni_order(n), j_order(k);
-	for (Node i = 0; i < n; ++i) ni_order[i] = i;
+	std::vector<Node> ni_order(n - 1), j_order(k);
+	for (Node i = 1; i < n; ++i) ni_order[i - 1] = i;
 	for (Node j = 0; j < k; ++j) j_order[j] = j;
 
 	bool improved_once = false;
@@ -43,6 +43,9 @@ int LocalSearch::findLocalMinimum(Solution& solution)
 				case 1:
 					improved = solution.Swap(i, j, true);
 					break;
+				case 2:
+					improved = solution.Opt2(i, j, true);
+					break;
 				}
 				if (improved) {
 					neighbourhood_level = 0;
@@ -63,15 +66,15 @@ int LocalSearch::findLocalMinimum(Solution& solution)
 void LocalSearch::perturbSolution(Solution& solution,
 	                              std::size_t pertubationSize)
 {
-	const int neighbourhood_level_cnt = 1;
+	const int neighbourhood_level_cnt = 3;
 	int neighbourhood_level = neighbourhood_level_cnt - 1;
 
 	// Do a bit of preprocessing
 	auto n = solution.GetInstance()->GetSize();
 	auto gammaset = solution.GetInstance()->GetGammaSet();
 	auto k = gammaset->getK();
-	std::vector<Node> ni_order(n), j_order(k);
-	for (Node i = 0; i < n; ++i) ni_order[i] = i;
+	std::vector<Node> ni_order(n - 1), j_order(k);
+	for (Node i = 1; i < n; ++i) ni_order[i - 1] = i;
 	for (Node j = 0; j < k; ++j) j_order[j] = j;
 
 	bool perturbedOnce = false;
@@ -95,6 +98,9 @@ void LocalSearch::perturbSolution(Solution& solution,
 					break;
 				case 1:
 					applied = solution.Swap(i, j, false);
+					break;
+				case 2:
+					applied = solution.Opt2(i, j, false);
 					break;
 				}
 				if (applied) {

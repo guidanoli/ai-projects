@@ -307,9 +307,7 @@ bool Solution::Shift (std::size_t p, std::size_t q, bool improve)
 
 	/* Apply move */
 	remove(np);
-	auto it = begin();
-	std::advance(it, q);
-	insert(it, np);
+	insert(std::next(begin(), q), np);
 
 	/* Update distance map */
 	recalculateLatencyMap(std::min(p, q));
@@ -364,12 +362,72 @@ bool Solution::Swap(std::size_t p, std::size_t q, bool improve)
 	}
 
 	/* Apply move */
-	auto p_it = begin(), q_it = begin();
-	std::advance(p_it, p);
-	std::advance(q_it, q);
-	std::swap(*p_it, *q_it);
+	std::swap(*std::next(begin(), p),
+	          *std::next(begin(), q));
 
 	/* Update distance map */
+	recalculateLatencyMap(p);
+
+	return true;
+}
+
+bool Solution::Opt2(std::size_t p, std::size_t q, bool improve)
+{
+	auto n = instance_ptr->GetSize();
+
+	/* p != q */
+	if (n < 3) return false;
+
+	/* Filtering arbitrary input
+	* such that 0 < p < q < n */
+	p = (p % (n - 1)) + 1;
+	q = (q % (n - 1)) + 1;
+	if (p == q) return false;
+	if (p > q) std::swap(p, q);
+
+	/* The same as shift(p,q) */
+	if (q == p + 1) return false;
+
+	/* The same as swap(p,q) */
+	if (q == p + 2) return false;
+
+	if (improve) {
+
+		/*
+		* BEFORE
+		* ... -- x -- p -- p+1 -- ... -- q-1 -- q -- y -- ...
+		*
+		* AFTER
+		* ... -- x -- q -- q-1 -- ... -- p+1 -- p -- y -- ...
+		*/
+
+		Node np = Get(p), nq = Get(q),
+			nx = Get(p - 1), ny = Get(q + 1);
+
+		Cost dxp = GetDist(nx, np), dqy = GetDist(nq, ny),
+			dxq = GetDist(nx, nq), dpy = GetDist(np, ny);
+
+		Cost delta = (n - p + 1) * (dxq - dxp)
+			+ (n - q) * (dpy - dqy);
+
+		auto it = std::next(begin(), p + 1);
+		auto prev = std::prev(it);
+		auto end = std::next(begin(), q + 1);
+		long long up = p, uq = q;
+		long long pos = up + 1;
+
+		for (; it != end; ++it, ++prev, ++pos)
+			delta += GetDist(*prev, *it) * (2 * pos - up - uq - 1);
+
+		/* Does not accept solution of same cost */
+		if (delta >= 0) return false;
+
+	}
+
+	/* Apply move */
+	std::reverse(std::next(begin(), p),
+	             std::next(begin(), q+1));
+
 	recalculateLatencyMap(p);
 
 	return true;
