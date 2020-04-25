@@ -28,20 +28,12 @@ struct options_t
 		assert(instance_ptr_opt);
 		auto instance_ptr = *instance_ptr_opt;
 		assert(instance_ptr);
-		assert(instance_ptr->GetSize() > 0);
+		assert(instance_ptr->IsValid());
 		assert(instance_ptr->GetSourceFilePath() == instance_path);
 
 		// Test creating solution
 		auto solution = Solution(instance_ptr);
-		auto n = instance_ptr->GetSize();
-		std::vector<bool> node_set(n - 1, false);
-		for (std::size_t node = 1; node < n; ++node) {
-			assert(!node_set[node - 1]);
-			auto node_index = solution.GetIndexOf(node);
-			assert(node_index < solution.size());
-			assert(solution.Get(node_index) == node);
-			node_set[node - 1] = true;
-		}
+		assert(solution.IsValid());
 
 		// Test cost and gap
 		Cost scost = solution.GetCost();

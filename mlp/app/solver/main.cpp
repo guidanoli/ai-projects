@@ -166,6 +166,8 @@ int main(int argc, char** argv)
 		if (!instance_opt)
 			return 1;
 		auto instance = *instance_opt;
+		if (options.validate && !instance->IsValid())
+			return 1;
 		if (options.gammak)
 			instance->SetK(options.gammak);
 		Solution solution(instance);
@@ -201,6 +203,8 @@ int main(int argc, char** argv)
 			std::cout << (instance_ptr_opt ? "OK" : "ERROR") << std::endl;
 			if (!instance_ptr_opt) continue; // Ignore errors
 			auto instance_ptr = *instance_ptr_opt;
+			if (options.validate && !instance_ptr->IsValid())
+				return 1;
 			if (options.gammak)
 				instance_ptr->SetK(options.gammak);
 			Solution solution(instance_ptr);

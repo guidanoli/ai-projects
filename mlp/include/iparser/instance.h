@@ -18,6 +18,9 @@ public:
 	std::shared_ptr<ds::Matrix<Pos> const> GetPositionMatrix() const { return posmatrix; }
 	void SetK(std::size_t k) { gammaset = std::make_shared<ds::GammaSet>(*this, k); }
 	std::shared_ptr<ds::GammaSet const> GetGammaSet() const { return gammaset; }
+	
+	// for debugging purposes
+	bool IsValid() const;
 private:
 	Instance() = default;
 private:

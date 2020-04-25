@@ -11,21 +11,20 @@ using namespace ds;
 GammaSet::GammaSet(Instance const& instance, std::size_t k)
 {
 	auto n = instance.GetSize();
-	k = std::min(k, n - 1);
-	this->k = k;
+	this->k = k = std::clamp(k, (std::size_t) 1, n - 1);
 	for (Node node = 0; node < n; ++node) {
 		auto order = [instance, node] (Node const& a, Node const& b) {
-			return instance[node][a] < instance[node][b];
+			auto da = instance[node][a];
+			auto db = instance[node][b];
+			return da < db || (da == db && a < b);
 		};
 		auto ordered_set = std::set<Node, decltype(order)>(order);
 		for (Node neighbour = 0; neighbour < n; ++neighbour) {
 			if (neighbour == node) continue;
 			ordered_set.insert(neighbour);
 		}
-		auto it = ordered_set.begin();
-		auto end = it;
-		std::advance(end, k);
-		map[node] = std::vector<Node>(it, end);
+		map[node] = std::vector<Node>(ordered_set.begin(),
+			std::next(ordered_set.begin(), k));
 	}
 }
 
