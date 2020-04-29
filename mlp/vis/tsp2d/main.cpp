@@ -162,13 +162,15 @@ int main(int argc, char** argv)
 		else
 			return 1;
 
-		auto gap_opt = options.solution.GetCostGap();
-
-		if (gap_opt)
-			std::cout << "Gap = " << *gap_opt * 100 << "%\n";
-
 		options.instance_ptr = options.solution.GetInstance();
 	}
+
+	std::cout << "Cost = " << options.solution.GetCost() << std::endl;
+
+	auto gap_opt = options.solution.GetCostGap();
+
+	if (gap_opt)
+		std::cout << "Gap = " << *gap_opt * 100 << "%\n";
 
 	if (!options.instance_ptr->GetPositionMatrix()) {
 		std::cerr << "No position matrix.\n";

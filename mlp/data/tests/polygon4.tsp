@@ -1,4 +1,4 @@
-NAME: square
+NAME: polygon4
 TYPE: TSP
 COMMENT: Square
 DIMENSION: 4

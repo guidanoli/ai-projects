@@ -52,6 +52,8 @@ struct options_t
 					<< "\t0 - end\n"
 					<< "\t1 - shift\n"
 					<< "\t2 - swap\n"
+					<< "\t3 - 2-opt\n"
+					<< "\t4 - shift2\n"
 					<< ">>> ";
 
 				int opt;
@@ -60,24 +62,34 @@ struct options_t
 				if (opt == 0)
 					break;
 
-				int i, j;
+				int p, q, r;
 				bool must_improve;
 				dump(solution);
 				
-				std::cout << "i = ";
-				std::cin >> i;
-				std::cout << "j = ";
-				std::cin >> j;
+				std::cout << "p = ";
+				std::cin >> p;
+				std::cout << "q = ";
+				std::cin >> q;
+				if (opt == 4) {
+					std::cout << "r =";
+					std::cin >> r;
+				}
 				std::cout << "Must improve? ";
 				std::cin >> must_improve;
 				bool applied;
 
 				switch (opt) {
 				case 1:
-					applied = solution.Shift(i, j, must_improve);
+					applied = solution.Shift(p, q, must_improve);
 					break;
 				case 2:
-					applied = solution.Swap(i, j, must_improve);
+					applied = solution.Swap(p, q, must_improve);
+					break;
+				case 3:
+					applied = solution.Opt2(p, q, must_improve);
+					break;
+				case 4:
+					applied = solution.Shift2(p, q, r, must_improve);
 					break;
 				default:
 					std::cerr << "Invalid option\n";
