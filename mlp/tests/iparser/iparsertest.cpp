@@ -62,7 +62,7 @@ struct options_t
 				if (opt == 0)
 					break;
 
-				int p, q, r;
+				int p, q, r = 0;
 				bool must_improve;
 				dump(solution);
 				
@@ -71,7 +71,7 @@ struct options_t
 				std::cout << "q = ";
 				std::cin >> q;
 				if (opt == 4) {
-					std::cout << "r =";
+					std::cout << "r = ";
 					std::cin >> r;
 				}
 				std::cout << "Must improve? ";

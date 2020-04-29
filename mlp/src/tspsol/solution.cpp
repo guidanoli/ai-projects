@@ -490,6 +490,8 @@ bool Solution::Shift2(std::size_t p, std::size_t q, std::size_t r, bool improve)
 			std::next(begin(), p),
 			std::next(begin(), q + 1));
 
+		recalculateLatencyMap(p);
+
 	} else if (r < p) {
 
 		// leftshift2 (TODO)
