@@ -15,7 +15,8 @@ Solution::Solution (Solution const& solution) :
 {}
 
 Solution::Solution (std::shared_ptr<Instance> instance_ptr, bool greedy) :
-	instance_ptr(instance_ptr)
+	instance_ptr(instance_ptr),
+	latency_map(instance_ptr->GetSize() + 1)
 {
 	std::size_t n = instance_ptr->GetSize();
 	if (greedy) {
@@ -81,7 +82,7 @@ void Solution::recalculateLatencyMap(std::size_t pos)
 
 	if (pos > 1) {
 		std::advance(prev, pos - 1);
-		latency = latency_map.at(pos - 1);
+		latency = latency_map[pos - 1];
 	}
 
 	while (it != end()) {
@@ -143,6 +144,7 @@ std::ifstream& operator>> (std::ifstream& ifs, Solution& s)
 		added_nodes[nodei - 1] = true;
 	}
 	s.push_back(0); // final depot
+	s.latency_map = std::vector<Cost>(n + 1);
 	s.recalculateLatencyMap();
 	return ifs; // Ok
 }
@@ -152,7 +154,7 @@ Cost Solution::GetCost () const
 	Cost cost = 0;
 	auto n = instance_ptr->GetSize();
 	for (std::size_t i = 1; i <= n; ++i)
-		cost += latency_map.at(i);
+		cost += latency_map[i];
 	return cost;
 }
 
@@ -174,7 +176,7 @@ Node Solution::Get (std::size_t index) const
 
 Cost Solution::GetLatencyAt(std::size_t index) const
 {
-	return latency_map.at(index);
+	return latency_map[index];
 }
 
 Dist Solution::GetDist(Node i, Node j) const
@@ -429,6 +431,79 @@ bool Solution::Opt2(std::size_t p, std::size_t q, bool improve)
 	             std::next(begin(), q+1));
 
 	recalculateLatencyMap(p);
+
+	return true;
+}
+
+bool Solution::Shift2(std::size_t p, std::size_t q, std::size_t r, bool improve)
+{
+	auto n = instance_ptr->GetSize();
+
+	/* p != q != r */
+	if (n < 4) return false;
+
+	/* Filtering arbitrary input
+	* such that 0 < p < q < r < n */
+	p = (p % (n - 1)) + 1;
+	q = (q % (n - 1)) + 1;
+	r = (r % (n - 1)) + 1;
+	if (p == q) return false;
+	if (p > q) std::swap(p, q);
+
+	if (r > q) {
+
+		// rightshift2
+
+		/* Same as shift(r,p) */
+		if (r == q + 1) return false;
+
+		if (improve) {
+
+			/*
+			* BEFORE
+			* ... -- x -- p -- ... -- q -- y -- ... -- r -- z -- ...
+			*
+			* AFTER
+			* ... -- x -- y -- ... -- r -- p -- ... -- q -- z -- ...
+			*/
+
+			Node np = Get(p), nq = Get(q), nr = Get(r),
+				nx = Get(p - 1), ny = Get(q + 1), nz = Get(r + 1);
+
+			Cost dxy = GetDist(nx, ny), drp = GetDist(nr, np),
+				dqz = GetDist(nq, nz), dxp = GetDist(nx, np),
+				dqy = GetDist(nq, ny), drz = GetDist(nr, nz);
+
+			Cost delta = (n - p + 1) * (dxy - dxp)
+				+ (n - r) * (dqz - drz)
+				+ (n - p - r + q + 1) * drp
+				+ (n - q) * dqy
+				+ (q - p + 1) * (latency_map[r] - latency_map[q + 1])
+				+ (r - q) * (latency_map[p] - latency_map[q]);
+
+			/* Does not accept solution of same cost */
+			if (delta >= 0) return false;
+		}
+
+		/* Apply move */
+		splice(std::next(begin(), r + 1), *this,
+			std::next(begin(), p),
+			std::next(begin(), q + 1));
+
+	} else if (r < p) {
+
+		// leftshift2 (TODO)
+
+		/* Same as shift(r,q) */
+		if (r == p - 1) return false;
+
+		return false;
+
+	} else {
+
+		// Invalid r
+		return false;
+	}
 
 	return true;
 }

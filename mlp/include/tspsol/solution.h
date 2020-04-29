@@ -5,6 +5,7 @@
 #include <memory>
 #include <map>
 #include <optional>
+#include <vector>
 
 #include "instance.h"
 #include "bksparser.h"
@@ -39,13 +40,13 @@ public:
 	bool Shift (std::size_t p, std::size_t q, bool improve);
 	bool Swap (std::size_t p, std::size_t q, bool improve);
 	bool Opt2 (std::size_t p, std::size_t q, bool improve);
-	bool Shift2 (std::size_t p, std::size_t q, std::size_t z, bool improve);
+	bool Shift2 (std::size_t p, std::size_t q, std::size_t r, bool improve);
 
 	// for debugging
 	bool IsValid () const;
 private:
 	void recalculateLatencyMap(std::size_t start = 0);
 private:
-	std::map<std::size_t, Cost> latency_map;
+	std::vector<Cost> latency_map;
 	std::shared_ptr<Instance> instance_ptr;
 };
