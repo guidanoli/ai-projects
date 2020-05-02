@@ -11,7 +11,8 @@ struct IterationStatus
 {
 	Solution& solution;
 	std::size_t iteration_id = 0;
-	unsigned long long duration;
+	std::size_t perturbationSize = 0;
+	unsigned long long t_last_improvement;
 };
 
 class IteratedLocalSearch
@@ -40,9 +41,10 @@ public:
 	// Starts with 'initial_solution'
 	// Pertubation of magnitude of 'pertubation'
 	// Stops when 'stopping_criterion()' is true
-	Solution explore (Solution const& initial_solution,
-	                  double pertubation,
-	                  StoppingCriterion stopping_criterion);
+	Solution IteratedLocalSearch::explore(Solution const& initial_solution,
+		                                  double perturbation,
+		                                  unsigned long long ils_decay_factor,
+		                                  StoppingCriterion stopping_criterion);
 private:
 	unsigned int seed;
 };

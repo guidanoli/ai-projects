@@ -25,13 +25,17 @@ struct options_t
 	std::string heuristic;
 	unsigned long long max_iterations = 0;
 	unsigned long long max_seconds = 0;
+	
 	unsigned int seed = 0;
 	std::size_t gammak = 0;
 	float gap_threshhold = 0;
 	bool does_save = false;
 	bool verbose = true;
 	bool validate = false;
+
+	unsigned long long ils_decay_factor = 0;
 	float ils_perturbation_factor = 0;
+
 	std::string savefolder;
 	std::string savefilename;
 
@@ -48,7 +52,7 @@ struct options_t
 			return true;
 		}
 		if (max_seconds &&
-			status.duration > max_seconds) {
+			status.t_last_improvement > max_seconds) {
 			std::cout << "Exceeded maximum elapsed time of "
 				<< max_seconds << " seconds\n";
 			return true;
@@ -59,8 +63,14 @@ struct options_t
 				<< gap_threshhold * 100 << "%\n";
 			return true;
 		}
-		if (verbose)
+		if (status.perturbationSize == 1) {
+			std::cout << "Exceeded perturbation size limit of 1\n";
+			return true;
+		}
+		if (verbose) {
+			std::cout << "Phi = " << status.perturbationSize << " ";
 			print_gap(status.solution);
+		}
 		return false;
 	}
 
@@ -70,6 +80,7 @@ struct options_t
 			std::cout << "Starting ILS...\n";
 			auto end_solution = ils.explore(solution,
 				ils_perturbation_factor,
+				ils_decay_factor,
 				[*this] (IterationStatus const& status) {
 					return stop_ils(status);
 				});
@@ -142,12 +153,17 @@ int main(int argc, char** argv)
 			arg::def(0.25f))
 
 		.bind("max-iterations", &options_t::max_iterations,
-			arg::doc("Maximum number of iterations"),
-			arg::def(3000))
+			arg::doc("Maximum number of iterations since last improved"),
+			arg::def(1000))
 
 		.bind("max-seconds", &options_t::max_seconds,
-			arg::doc("Maximum time elapsed (in seconds)"),
-			arg::def(60))
+			arg::doc("Maximum time elapsed (in seconds) since last improved"))
+
+		.bind("decay", &options_t::ils_decay_factor,
+			arg::doc("Decay time. After this time, the perturbation size "
+				     "decreases by ~63%. If zero, perturbation size will be "
+			         "the same throughout the local search"),
+			arg::def(30))
 
 		.bind("gamma-k", &options_t::gammak,
 			arg::doc("Gamma set size"))
