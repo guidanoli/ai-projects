@@ -476,7 +476,7 @@ bool Solution::Shift2(std::size_t p, std::size_t q, std::size_t r, bool improve)
 
 			Cost delta = (n - p + 1) * (dxy - dxp)
 				+ (n - r) * (dqz - drz)
-				+ (n - p - r + q + 1) * drp
+				+ (n + q - p - r + 1) * drp
 				+ (n - q) * dqy
 				+ (q - p + 1) * (latency_map[r] - latency_map[q + 1])
 				+ (r - q) * (latency_map[p] - latency_map[q]);
@@ -494,12 +494,45 @@ bool Solution::Shift2(std::size_t p, std::size_t q, std::size_t r, bool improve)
 
 	} else if (r < p) {
 
-		// leftshift2 (TODO)
+		// leftshift2
 
 		/* Same as shift(r,q) */
 		if (r == p - 1) return false;
 
-		return false;
+		if (improve) {
+
+			/*
+			* BEFORE
+			* ... -- x -- r -- ... -- y -- p -- ... -- q -- z -- ...
+			*
+			* AFTER
+			* ... -- x -- p -- ... -- q -- r -- ... -- y -- z -- ...
+			*/
+
+			Node np = Get(p), nq = Get(q), nr = Get(r),
+				nx = Get(r - 1), ny = Get(p - 1), nz = Get(q + 1);
+
+			Cost dxp = GetDist(nx, np), dxr = GetDist(nx, nr),
+				dyz = GetDist(ny, nz), dqz = GetDist(nq, nz),
+				dqr = GetDist(nq, nr), dyp = GetDist(ny, np);
+
+			Cost delta = (n - r + 1) * (dxp - dxr)
+				+ (n - q) * (dyz - dqz)
+				+ (n + p - q - r) * dqr
+				+ (p - r) * (latency_map[q] - latency_map[p])
+				- (q - p + 1) * (latency_map[p - 1] - latency_map[r])
+				- (n - p + 1) * dyp;
+
+			/* Does not accept solution of same cost */
+			if (delta >= 0) return false;
+		}
+
+		/* Apply move */
+		splice(std::next(begin(), r), *this,
+			std::next(begin(), p),
+			std::next(begin(), q + 1));
+
+		recalculateLatencyMap(r);
 
 	} else {
 
