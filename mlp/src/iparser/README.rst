@@ -5,10 +5,7 @@ Parses instance files into C++ data structures.
 
 .. warning::
    This parser is **incomplete**. Its features are
-   added while new necessities arise. This is due to
-   the nature of this project. Since the set of
-   instances is limited, there is no reason to
-   be able to parse all the possible fields.
+   added as soon as new necessities arise.
 
 InstanceParser
 --------------
