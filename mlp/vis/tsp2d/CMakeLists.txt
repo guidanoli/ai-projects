@@ -1,1 +1,0 @@
-target_link_libraries(tsp2dvis iparserlib argparserlib tspsollib)

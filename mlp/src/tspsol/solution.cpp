@@ -14,51 +14,55 @@ Solution::Solution (Solution const& solution) :
 	instance_ptr(solution.instance_ptr)
 {}
 
-Solution::Solution (std::shared_ptr<Instance> instance_ptr, bool greedy) :
+Solution::Solution(std::shared_ptr<Instance> instance_ptr,
+	std::size_t window_size, std::default_random_engine& rng) :
 	instance_ptr(instance_ptr),
 	latency_map(instance_ptr->GetSize() + 1)
 {
 	std::size_t n = instance_ptr->GetSize();
-	if (greedy) {
-		std::vector<bool> added_clients(n, false);
-		Node node = 0;
-		push_back(0); // initial depot
-		auto const& gammaset = instance_ptr->GetGammaSet();
-		constexpr Dist max_dist = std::numeric_limits<Dist>::max();
-		for (std::size_t i = 1; i < n; ++i) {
-			auto const& neighbours = gammaset->getClosestNeighbours(node);
-			Node closest_node = node;
-			added_clients[node] = true;
-			bool found_closest = false;
-			for (auto const& neighbour : neighbours) {
-				if (!added_clients[neighbour]) {
-					closest_node = neighbour;
-					found_closest = true;
+	std::vector<bool> added_clients(n, false);
+	Node node = 0;
+	push_back(0); // initial depot
+	auto const& gammaset = instance_ptr->GetGammaSet();
+	constexpr Dist max_dist = std::numeric_limits<Dist>::max();
+	for (std::size_t i = 1; i < n; ++i) {
+		auto const& neighbours = gammaset->getClosestNeighbours(node);
+		std::vector<Node> window;
+		Node closest_node = node;
+		added_clients[node] = true;
+		bool found = false;
+		for (auto const& neighbour : neighbours) {
+			if (!added_clients[neighbour]) {
+				found = true;
+				window.push_back(neighbour);
+				if (window.size() >= window_size)
 					break;
-				}
 			}
-			if (!found_closest) {
-				Dist min_dist = max_dist;
-				for (Node j = 1; j < n; ++j) {
-					if (!added_clients[j]) {
-						Dist dist = (*instance_ptr)[node][j];
-						if (dist < min_dist) {
-							closest_node = j;
-							min_dist = dist;
-							found_closest = true;
-						}
+		}
+		if (found) {
+			std::sample(window.begin(),
+			            window.end(),
+			            &closest_node,
+			            1,
+			            rng);
+		} else {
+			Dist min_dist = max_dist;
+			for (Node j = 1; j < n; ++j) {
+				if (!added_clients[j]) {
+					Dist dist = (*instance_ptr)[node][j];
+					if (dist < min_dist) {
+						closest_node = j;
+						min_dist = dist;
+						found = true;
 					}
 				}
 			}
-			assert(found_closest);
-			push_back(closest_node);
-			node = closest_node;
 		}
-		push_back(0); // final depot
-	} else {
-		for (std::size_t i = 0; i <= n; ++i)
-			push_back(i % n);
+		assert(found);
+		push_back(closest_node);
+		node = closest_node;
 	}
+	push_back(0); // final depot
 	recalculateLatencyMap();
 }
 

@@ -4,6 +4,7 @@
 #include <list>
 #include <memory>
 #include <map>
+#include <random>
 #include <optional>
 #include <vector>
 
@@ -20,7 +21,9 @@ class Solution : public std::list<Node>
 {
 public:
 	Solution (Solution const& solution);
-	Solution (std::shared_ptr<Instance> instance_ptr, bool greedy = true);
+	Solution (std::shared_ptr<Instance> instance_ptr,
+		std::size_t window_size = 1,
+		std::default_random_engine& rng = std::default_random_engine(0));
 	std::shared_ptr<Instance> GetInstance () const;
 	std::optional<double> GetCostGap () const;
 
