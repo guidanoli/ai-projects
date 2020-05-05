@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <vector>
 #include <random>
+#include <map>
 #include <memory>
 
 #include "solution.h"
@@ -11,10 +12,21 @@ class Population : public std::vector<std::shared_ptr<Solution>>
 {
 public:
 	Population(std::shared_ptr<Instance> instance_ptr,
-		std::size_t minsize, std::size_t maxsize,
+		std::size_t minSize, std::size_t maxSize,
 		std::size_t window, unsigned int seed);
+	void DoNextGeneration ();
+
+	std::size_t GetGenerationCount () const;
+
+	void SetMatingPoolSize (std::size_t matingPoolSize);
+	std::size_t GetMatingPoolSize () const;
+
+	void AddSolution (std::shared_ptr<Solution> sol);
+	void RemoveSolution (std::size_t index);
+	Cost GetSolutionCost (std::shared_ptr<Solution> const& sol) const;
 private:
 	std::shared_ptr<Instance> instance_ptr;
-	std::size_t minsize, maxsize;
+	std::map<std::shared_ptr<Solution>, Cost> cost_map;
+	std::size_t minSize, maxSize, matingPoolSize, generationCount;
 	std::default_random_engine rng;
 };

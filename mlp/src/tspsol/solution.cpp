@@ -109,6 +109,34 @@ std::ofstream& operator<< (std::ofstream& ofs, Solution const& s)
 	return ofs;
 }
 
+Solution* crossover(Solution const& sa, Solution const& sb,
+	std::default_random_engine& rng)
+{
+	auto n = sa.instance_ptr->GetSize();
+	bool sol_is_a = true; // current solution is a?
+	std::vector<Node> sol_vec(n + 1, 0); // depot + clients + depot
+	std::size_t pos = (rng() % (n - 1)) + 1; // points to clients
+	for (std::size_t i = 0; i < n; ++i, pos = pos % (n - 1) + 1) {
+		if (sol_vec[pos] == 0) { // if node in position is not set yet...
+			auto initial_pos = pos;
+			auto const& curr_sol = sol_is_a ? sa : sb;
+			auto const& other_sol = sol_is_a ? sb : sa;
+			do {
+				auto node = curr_sol.Get(pos); // node pointed by pos
+				sol_vec[pos] = node; // save node in position
+				pos = other_sol.GetIndexOf(node); // mapped position
+			} while (pos != initial_pos);
+			sol_is_a = !sol_is_a; // alternates solution
+		}
+	}
+	auto sol = new Solution();
+	sol->instance_ptr = sa.instance_ptr;
+	sol->insert(sol->begin(), sol_vec.begin(), sol_vec.end());
+	sol->latency_map = std::vector<Cost>(n + 1);
+	sol->recalculateLatencyMap();
+	return sol;
+}
+
 std::ifstream& operator>> (std::ifstream& ifs, Solution& s)
 {
 	if (!ifs) return ifs;

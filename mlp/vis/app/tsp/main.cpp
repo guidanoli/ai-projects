@@ -77,6 +77,18 @@ void display()
 	glutSwapBuffers(); // Refresh the buffer
 }
 
+void print_pploter_data(std::shared_ptr<PopulationPlotter> pplotter)
+{
+	auto current = pplotter->GetCurrentSolutionIndex();
+	auto population_ptr = pplotter->GetPopulation();
+	auto curr_solution = population_ptr->at(current);
+	auto gap_opt = curr_solution->GetCostGap();
+	std::cout << "S#" << current;
+	if (gap_opt)
+		std::cout << " (" << *gap_opt * 100 << "%)";
+	std::cout << std::endl;
+}
+
 void key(int key_id, int, int)
 {
 	if (!options.population)
@@ -85,18 +97,21 @@ void key(int key_id, int, int)
 	auto current = pplotter->GetCurrentSolutionIndex();
 	auto nsols = pplotter->GetNumberOfSolutions();
 	if (key_id == GLUT_KEY_LEFT) {
-		pplotter->SetSolution((current + 1) % nsols);
+		pplotter->SetSolution((current + nsols - 1) % nsols);
+		print_pploter_data(pplotter);
+		display();
 	} else if (key_id == GLUT_KEY_RIGHT) {
-		pplotter->SetSolution((current - 1 + nsols) % nsols);
+		pplotter->SetSolution((current + 1) % nsols);
+		print_pploter_data(pplotter);
+		display();
+	} else if (key_id == GLUT_KEY_F9) {
+		pplotter->GetPopulation()->DoNextGeneration();
+		pplotter->SetSolution(0);
+		print_pploter_data(pplotter);
+		display();
+	} else {
+		std::cout << "Unknown key";
 	}
-	std::cout << "S#" << current;
-	auto population_ptr = pplotter->GetPopulation();
-	auto curr_solution = population_ptr->at(current);
-	auto gap_opt = curr_solution->GetCostGap();
-	if (gap_opt)
-		std::cout << " (" << *gap_opt * 100 << "%)";
-	std::cout << std::endl;
-	display();
 }
 
 int main(int argc, char** argv)

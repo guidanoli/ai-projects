@@ -47,6 +47,10 @@ public:
 
 	// for debugging
 	bool IsValid () const;
+
+	// crossover -- assumes solution come from the same instance
+	friend Solution* crossover(Solution const& sa, Solution const& sb,
+		std::default_random_engine &rng);
 private:
 	void recalculateLatencyMap(std::size_t start = 0);
 private:
