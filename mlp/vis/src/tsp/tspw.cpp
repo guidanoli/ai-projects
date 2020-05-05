@@ -3,8 +3,7 @@
 std::shared_ptr<TspWindow> TspWindow::instance = nullptr;
 
 TspWindow::TspWindow() :
-	iplotter(nullptr),
-	splotter(nullptr),
+	plotter(nullptr),
 	need_config(false)
 {}
 
@@ -15,46 +14,29 @@ std::shared_ptr<TspWindow> TspWindow::GetInstance()
 	return instance;
 }
 
-void TspWindow::SetInstancePlotter(std::shared_ptr<InstancePlotter> iplotter)
+void TspWindow::SetPlotter(std::shared_ptr<AbstractPlotter> plotter)
 {
 	need_config = true;
-	this->splotter = nullptr;
-	this->iplotter = iplotter;
+	this->plotter = plotter;
 }
 
-void TspWindow::SetSolutionPlotter(std::shared_ptr<SolutionPlotter> splotter)
+std::shared_ptr<AbstractPlotter> TspWindow::GetPlotter() const
 {
-	need_config = true;
-	this->iplotter = nullptr;
-	this->splotter = splotter;
+	return plotter;
 }
 
-std::shared_ptr<InstancePlotter> TspWindow::GetInstancePlotter() const
-{
-	return iplotter;
-}
-
-std::shared_ptr<SolutionPlotter> TspWindow::GetSolutionPlotter() const
-{
-	return splotter;
-}
-
-void TspWindow::Display()
+void TspWindow::Plot()
 {
 	Config();
-	if (iplotter)
-		iplotter->Plot();
-	else if (splotter)
-		splotter->Plot();
+	if (plotter)
+		plotter->Plot();
 }
 
 void TspWindow::Config()
 {
 	if (!need_config)
 		return;
-	if (iplotter)
-		iplotter->Config();
-	else if (splotter)
-		splotter->Config();
+	if (plotter)
+		plotter->Config();
 	need_config = false;
 }

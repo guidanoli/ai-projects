@@ -1,1 +1,1 @@
-target_link_libraries(tspvisapp iparserlib argparserlib tspsollib tspvislib)
+target_link_libraries(tspvisapp iparserlib argparserlib tspsollib tspvislib tspgenlib)

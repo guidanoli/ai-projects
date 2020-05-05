@@ -43,7 +43,7 @@ void InstancePlotter::SetMargin(float margin)
 	this->margin = margin;
 }
 
-void InstancePlotter::Config() const
+void InstancePlotter::Config()
 {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -55,7 +55,7 @@ void InstancePlotter::Config() const
 	glPointSize(size);
 }
 
-void InstancePlotter::Plot() const
+void InstancePlotter::Plot()
 {
 	auto matrix = instance_ptr->GetPositionMatrix();
 	auto n = matrix->getm();

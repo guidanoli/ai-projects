@@ -25,7 +25,7 @@ void SolutionPlotter::SetLineWidth(float width)
 	this->width = width;
 }
 
-void SolutionPlotter::Plot() const
+void SolutionPlotter::Plot()
 {
 	auto matrix = solution_ptr->GetInstance()->GetPositionMatrix();
 	glColor3f(r, g, b);
@@ -36,7 +36,7 @@ void SolutionPlotter::Plot() const
 	iplotter->Plot();
 }
 
-void SolutionPlotter::Config() const
+void SolutionPlotter::Config()
 {
 	iplotter->Config();
 }
