@@ -47,9 +47,11 @@ void Population::DoNextGeneration()
 			crossover(*firstParent, *secondParent, rng));
 		/* MUTATION */
 		if (rng() % 100 < 10) {
-			if (verbose)
-				std::cout << "Mutating...\n";
-			ls.perturbSolution(*offspring, offspring->GetInstance()->GetSize() / 10);
+			std::uniform_real_distribution<double> unif(0.05, 0.25);
+			double perturbationFactor = unif(rng);
+			auto instanceSize = offspring->GetInstance()->GetSize();
+			std::size_t perturbationSize = (std::size_t) (instanceSize * perturbationFactor);
+			ls.perturbSolution(*offspring, perturbationSize);
 		}
 		/* LOCAL SEARCH */
 		ls.findLocalMinimum(*offspring);
@@ -68,11 +70,8 @@ void Population::DoNextGeneration()
 					clone_indexes.insert(j);
 			}
 stop_finding_clones:
-		for (auto const& index : clone_indexes) {
-			if (verbose)
-				std::cout << "#" << at(index)->GetId() << " is a clone!\n";
+		for (auto const& index : clone_indexes)
 			RemoveSolution(index);
-		}
 
 		if (size() > minSize) {
 			/* REMOVAL OF THE WORSE */
@@ -118,6 +117,11 @@ std::size_t Population::GetMatingPoolSize() const
 void Population::SetVerbosity(bool isVerbose)
 {
 	this->verbose = isVerbose;
+}
+
+bool Population::GetVerbosity() const
+{
+	return verbose;
 }
 
 void Population::AddSolution(std::shared_ptr<Solution> sol)

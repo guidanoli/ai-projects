@@ -22,6 +22,7 @@ public:
 	std::size_t GetMatingPoolSize () const;
 
 	void SetVerbosity(bool isVerbose);
+	bool GetVerbosity() const;
 
 	void AddSolution (std::shared_ptr<Solution> sol);
 	void RemoveSolution (std::size_t index);

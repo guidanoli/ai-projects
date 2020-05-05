@@ -81,8 +81,8 @@ void display()
 void print_pplotter_data(std::shared_ptr<PopulationPlotter> pplotter)
 {
 	auto current = pplotter->GetCurrentSolutionIndex();
-	auto population_ptr = pplotter->GetPopulation();
-	auto curr_solution = population_ptr->at(current);
+	auto p = pplotter->GetPopulation();
+	auto curr_solution = p->at(current);
 	auto gap_opt = curr_solution->GetCostGap();
 	std::cout << "S#" << curr_solution->GetId();
 	if (gap_opt)
@@ -92,15 +92,29 @@ void print_pplotter_data(std::shared_ptr<PopulationPlotter> pplotter)
 
 void print_pplotter_gendata(std::shared_ptr<PopulationPlotter> pplotter)
 {
-	auto population_ptr = pplotter->GetPopulation();
-	auto best_solution = population_ptr->GetBestSolution();
+	auto p = pplotter->GetPopulation();
+	auto best_solution = p->GetBestSolution();
 	auto gap_opt = best_solution->GetCostGap();
-	std::cout << "Gen. " << population_ptr->GetGenerationCount()
-		<< " - Avg. Cost " << population_ptr->GetAverageCost()
+	std::cout << "Gen. " << p->GetGenerationCount()
+		<< " - Avg. Cost " << p->GetAverageCost()
 		<< " - Best Cost " << best_solution->GetCost();
 	if (gap_opt)
 		std::cout << " (" << *gap_opt * 100 << "%)";
 	std::cout << std::endl;
+}
+
+void show_pplotter_best_solution(std::shared_ptr<PopulationPlotter> pplotter)
+{
+	auto p = pplotter->GetPopulation();
+	auto best_solution = p->GetBestSolution();
+	auto it = std::find(p->begin(), p->end(), best_solution);
+	if (it != p->end()) {
+		auto index = std::distance(p->begin(), it);
+		if (index != pplotter->GetCurrentSolutionIndex()) {
+			pplotter->SetSolution(index);
+			display();
+		}
+	}
 }
 
 void key(int key_id, int, int)
@@ -131,6 +145,7 @@ void key(int key_id, int, int)
 		for (unsigned long long i = 0; i < num_of_gens; ++i) {
 			pplotter->GetPopulation()->DoNextGeneration();
 			print_pplotter_gendata(pplotter);
+			show_pplotter_best_solution(pplotter);
 		}
 	} else {
 		std::cout << "Unknown key";
@@ -195,7 +210,7 @@ int main(int argc, char** argv)
 
 		.bind("pop-minsize", &options_t::pop_minsize,
 			arg::doc("Population minimum size"),
-			arg::def(10))
+			arg::def(15))
 
 		.bind("pop-maxsize", &options_t::pop_maxsize,
 			arg::doc("Population maximum size"),
@@ -250,11 +265,11 @@ int main(int argc, char** argv)
 		instance_ptr = *instance_ptr_opt;
 
 		if (options.population) {
-			auto population_ptr = std::make_shared<Population>(instance_ptr,
+			auto p = std::make_shared<Population>(instance_ptr,
 				options.pop_minsize, options.pop_maxsize,
 				options.pop_window, options.pop_seed);
-			population_ptr->SetVerbosity(options.pop_verbose);
-			auto plotter = std::make_shared<PopulationPlotter>(population_ptr);
+			p->SetVerbosity(options.pop_verbose);
+			auto plotter = std::make_shared<PopulationPlotter>(p);
 			options.set_plotter(plotter);
 		} else {
 			auto plotter = std::make_shared<InstancePlotter>(instance_ptr);

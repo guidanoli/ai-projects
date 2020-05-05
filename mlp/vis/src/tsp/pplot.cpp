@@ -1,19 +1,19 @@
 #include "pplot.h"
 
-PopulationPlotter::PopulationPlotter(std::shared_ptr<Population> population_ptr) :
-	SolutionPlotter((*population_ptr)[0]),
-	population_ptr(population_ptr),
+PopulationPlotter::PopulationPlotter(std::shared_ptr<Population> p) :
+	SolutionPlotter((*p)[0]),
+	p(p),
 	current(0)
 {}
 
 std::shared_ptr<Population> PopulationPlotter::GetPopulation() const
 {
-	return population_ptr;
+	return p;
 }
 
 std::size_t PopulationPlotter::GetNumberOfSolutions() const
 {
-	return population_ptr->size();
+	return p->size();
 }
 
 std::size_t PopulationPlotter::GetCurrentSolutionIndex() const
@@ -24,7 +24,7 @@ std::size_t PopulationPlotter::GetCurrentSolutionIndex() const
 void PopulationPlotter::SetSolution(std::size_t index)
 {
 	current = index;
-	solution_ptr = (*population_ptr)[index];
+	solution_ptr = (*p)[index];
 }
 
 

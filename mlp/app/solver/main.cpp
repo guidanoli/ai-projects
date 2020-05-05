@@ -1,8 +1,12 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <chrono>
 
 #include "ils.h"
+#include "genetic.h"
+#include "population.h"
+
 #include "iparser.h"
 #include "argparser.h"
 #include "solution.h"
@@ -13,9 +17,11 @@ namespace fs = std::filesystem;
 const char help[] = R"(
 MLP Solver application
 ======================
-By default, the application opens the instance file and begins with the trivial
-initial solution. But you can also load an already existing solution with the
-'isfile' parameter.)";
+Solves an instance or a solution.
+Heuristics:
+- ils: Iterated Local Search
+- gen: Genetic Algorithm
+)";
 
 struct options_t
 {
@@ -35,6 +41,12 @@ struct options_t
 
 	unsigned long long ils_decay_factor = 0;
 	float ils_perturbation_factor = 0;
+
+	std::size_t gen_minsize = 0;
+	std::size_t gen_maxsize = 0;
+	std::size_t gen_window = 0;
+	std::size_t gen_mating_pool_size = 0;
+	std::size_t gen_max_generations = 0;
 
 	std::string savefolder;
 	std::string savefilename;
@@ -74,6 +86,33 @@ struct options_t
 		return false;
 	}
 
+	bool stop_gen(PopulationStatus const& status) const {
+		if (validate &&
+			!status.best_solution->IsValid()) {
+			std::cout << "Solution isn't valid.\n";
+			return true;
+		}
+		if (max_iterations &&
+			status.generations_sli > gen_max_generations) {
+			std::cout << "Exceeded maximum generation count of "
+				<< gen_max_generations << std::endl;
+			return true;
+		}
+		if (max_seconds &&
+			status.seconds_sli > max_seconds) {
+			std::cout << "Exceeded maximum elapsed time of "
+				<< max_seconds << " seconds\n";
+			return true;
+		}
+		auto gap_opt = status.best_solution->GetCostGap();
+		if (gap_opt && *gap_opt >= gap_threshhold) {
+			std::cout << "Exceeded gap threshhold of "
+				<< gap_threshhold * 100 << "%\n";
+			return true;
+		}
+		return false;
+	}
+
 	bool solve(Solution &solution) const {
 		if (heuristic == "ils") {
 			IteratedLocalSearch ils(seed);
@@ -81,9 +120,9 @@ struct options_t
 			auto end_solution = ils.explore(solution,
 				ils_perturbation_factor,
 				ils_decay_factor,
-				[*this] (IterationStatus const& status) {
-					return stop_ils(status);
-				});
+				[*this](IterationStatus const& status) {
+				return stop_ils(status);
+			});
 			std::cout << "End of ILS...\n";
 			print_gap(end_solution);
 			if (does_save) {
@@ -92,8 +131,29 @@ struct options_t
 				if (!save(end_solution))
 					std::cerr << "It was not possible to save solution.\n";
 			}
+		} else if (heuristic == "gen") {
+			auto instance_ptr = solution.GetInstance();
+			auto pop = std::make_shared<Population>(instance_ptr,
+				gen_minsize, gen_maxsize, gen_window, seed);
+			pop->SetVerbosity(verbose);
+			pop->SetMatingPoolSize(gen_mating_pool_size);
+			auto gen = Genetic(pop);
+			std::cout << "Starting GEN...\n";
+			auto end_solution = gen.explore(
+				[*this] (PopulationStatus const& status) {
+				return stop_gen(status);
+			});
+			std::cout << "End of GEN...\n";
+			print_gap(*end_solution);
+			if (does_save) {
+				std::cout << "Saving solution in "
+					<< savefolder << "/" << savefilename << std::endl;
+				if (!save(*end_solution))
+					std::cerr << "It was not possible to save solution.\n";
+			}
 		} else {
 			std::cerr << "Unknwon heuristic named '" << heuristic << "'.\n";
+			return false;
 		}
 		return true;
 	}
@@ -138,7 +198,7 @@ int main(int argc, char** argv)
 			arg::def(false))
 		
 		.bind("heuristic", &options_t::heuristic,
-			arg::doc("Solving heuristic"),
+			arg::doc("Solving heuristic. Available: ils, gen"),
 			arg::def("ils"))
 
 		.bind("seed", &options_t::seed,
@@ -153,7 +213,7 @@ int main(int argc, char** argv)
 			arg::def(0.25f))
 
 		.bind("max-iterations", &options_t::max_iterations,
-			arg::doc("Maximum number of iterations since last improved"),
+			arg::doc("Maximum number of iterations/generations since last improved"),
 			arg::def(1000))
 
 		.bind("max-seconds", &options_t::max_seconds,
@@ -170,6 +230,28 @@ int main(int argc, char** argv)
 
 		.bind("validate", &options_t::validate,
 			arg::doc("Check if solution is valid every iteration"))
+
+		.bind("gen-window", &options_t::gen_window,
+			arg::doc("Window of neighbours in random greedy construction "
+			         "heuristic used in the genetic algorithm"),
+			arg::def(3))
+
+		.bind("gen-mating-pool-size", &options_t::gen_mating_pool_size,
+			arg::doc("Genetic algorithm mating pool size"),
+			arg::def(2))
+
+		.bind("gen-min-size", &options_t::gen_minsize,
+			arg::doc("Genetic algorithm minimum population size"),
+			arg::def(15))
+
+		.bind("gen-max-size", &options_t::gen_maxsize,
+			arg::doc("Genetic algorithm maximum population size"),
+			arg::def(20))
+
+		.bind("gen-max-generations", &options_t::gen_max_generations,
+			arg::doc("Genetic algorithm maximum number of generations since "
+			         "last improved"),
+			arg::def(3000))
 
 		.build();
 

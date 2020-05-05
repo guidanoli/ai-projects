@@ -9,12 +9,12 @@
 class PopulationPlotter : public SolutionPlotter
 {
 public:
-	PopulationPlotter (std::shared_ptr<Population> population_ptr);
+	PopulationPlotter (std::shared_ptr<Population> p);
 	std::shared_ptr<Population> GetPopulation () const;
 	std::size_t GetNumberOfSolutions () const;
 	std::size_t GetCurrentSolutionIndex () const;
 	void SetSolution (std::size_t index);
 private:
-	std::shared_ptr<Population> population_ptr;
+	std::shared_ptr<Population> p;
 	std::size_t current;
 };
