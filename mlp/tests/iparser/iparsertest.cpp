@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 
 		.build();
 
-	auto bks_instance = BKSParser::getInstance();
+	auto bks_instance = BKSParser::GetInstance();
 
 	if (options.ifile.empty()) {
 		for (const auto& entry : fs::directory_iterator(DATAPATH)) {

@@ -6,6 +6,7 @@
 
 #include "iplot.h"
 #include "splot.h"
+#include "tspw.h"
 
 #include "iparser.h"
 #include "argparser.h"
@@ -48,20 +49,21 @@ public:
 	}
 
 	void config() {
+		auto window = TspWindow::GetInstance();
+
 		if (iplotter) {
 			set_iplotter_params(*iplotter);
-			(*iplotter)->Config();
+			window->SetInstancePlotter(*iplotter);
 		} else if (splotter) {
 			set_splotter_params(*splotter);
-			(*splotter)->Config();
+			window->SetSolutionPlotter(*splotter);
 		}
+
+		window->Config();
 	}
 
 	void plot() {
-		if (iplotter)
-			(*iplotter)->Plot();
-		else if (splotter)
-			(*splotter)->Plot();
+		TspWindow::GetInstance()->Display();
 	}
 };
 

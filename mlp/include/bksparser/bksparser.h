@@ -10,7 +10,7 @@ using Cost = long long;
 class BKSParser
 {
 public:
-	static std::shared_ptr<BKSParser> getInstance();
+	static std::shared_ptr<BKSParser> GetInstance();
 	std::optional<Cost> getInstanceBKS(std::string name);
 private:
 	BKSParser();

@@ -32,7 +32,7 @@ BKSParser::BKSParser()
 	}
 }
 
-std::shared_ptr<BKSParser> BKSParser::getInstance()
+std::shared_ptr<BKSParser> BKSParser::GetInstance()
 {
 	return instance;
 }

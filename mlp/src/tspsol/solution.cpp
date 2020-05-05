@@ -164,7 +164,7 @@ Cost Solution::GetCost () const
 
 std::optional<double> Solution::GetCostGap () const
 {
-	auto bksparser_ptr = BKSParser::getInstance();
+	auto bksparser_ptr = BKSParser::GetInstance();
 	auto bks_opt = bksparser_ptr->getInstanceBKS(instance_ptr->GetName());
 	if (!bks_opt) return std::nullopt;
 	auto bks = *bks_opt;
