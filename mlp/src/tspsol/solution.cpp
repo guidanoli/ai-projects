@@ -8,16 +8,22 @@
 #include <limits>
 #include <vector>
 
+unsigned long long Solution::_count = 0;
+
+Solution::Solution() : _id(_count++) {}
+
 Solution::Solution (Solution const& solution) :
 	std::list<std::size_t>(solution),
 	latency_map(solution.latency_map),
-	instance_ptr(solution.instance_ptr)
+	instance_ptr(solution.instance_ptr),
+	_id(_count++)
 {}
 
 Solution::Solution(std::shared_ptr<Instance> instance_ptr,
 	std::size_t window_size, std::default_random_engine& rng) :
 	instance_ptr(instance_ptr),
-	latency_map(instance_ptr->GetSize() + 1)
+	latency_map(instance_ptr->GetSize() + 1),
+	_id(_count++)
 {
 	std::size_t n = instance_ptr->GetSize();
 	std::vector<bool> added_clients(n, false);
@@ -265,6 +271,11 @@ bool Solution::IsValid() const
 	}
 
 	return true;
+}
+
+unsigned long long Solution::GetId() const
+{
+	return _id;
 }
 
 bool Solution::Shift (std::size_t p, std::size_t q, bool improve)

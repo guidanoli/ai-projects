@@ -1,6 +1,12 @@
+#include "..\..\include\tspils\ls.h"
 #include "ls.h"
 
 #include <algorithm>
+
+LocalSearch::LocalSearch(std::default_random_engine& rng)
+{
+	this->rng = rng;
+}
 
 LocalSearch::LocalSearch(unsigned int seed)
 {

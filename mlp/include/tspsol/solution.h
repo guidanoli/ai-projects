@@ -35,7 +35,7 @@ public:
 
 	// (de)serialization functions
 	// check for std::(i|o)fstream::good.
-	Solution() = default; // empty solution
+	Solution(); // empty solution
 	friend std::ifstream& operator>> (std::ifstream& ifs, Solution& s);
 	friend std::ofstream& operator<< (std::ofstream& ofs, Solution const& s);
 
@@ -47,6 +47,7 @@ public:
 
 	// for debugging
 	bool IsValid () const;
+	unsigned long long GetId () const;
 
 	// crossover -- assumes solution come from the same instance
 	friend Solution* crossover(Solution const& sa, Solution const& sb,
@@ -56,4 +57,6 @@ private:
 private:
 	std::vector<Cost> latency_map;
 	std::shared_ptr<Instance> instance_ptr;
+	unsigned long long _id;
+	static unsigned long long _count;
 };

@@ -37,6 +37,7 @@ public:
 	float frame = 0;
 
 	bool population = false;
+	bool pop_verbose = false;
 	std::size_t pop_minsize = 0;
 	std::size_t pop_maxsize = 0;
 	std::size_t pop_window = 0;
@@ -77,13 +78,26 @@ void display()
 	glutSwapBuffers(); // Refresh the buffer
 }
 
-void print_pploter_data(std::shared_ptr<PopulationPlotter> pplotter)
+void print_pplotter_data(std::shared_ptr<PopulationPlotter> pplotter)
 {
 	auto current = pplotter->GetCurrentSolutionIndex();
 	auto population_ptr = pplotter->GetPopulation();
 	auto curr_solution = population_ptr->at(current);
 	auto gap_opt = curr_solution->GetCostGap();
-	std::cout << "S#" << current;
+	std::cout << "S#" << curr_solution->GetId();
+	if (gap_opt)
+		std::cout << " (" << *gap_opt * 100 << "%)";
+	std::cout << std::endl;
+}
+
+void print_pplotter_gendata(std::shared_ptr<PopulationPlotter> pplotter)
+{
+	auto population_ptr = pplotter->GetPopulation();
+	auto best_solution = population_ptr->GetBestSolution();
+	auto gap_opt = best_solution->GetCostGap();
+	std::cout << "Gen. " << population_ptr->GetGenerationCount()
+		<< " - Avg. Cost " << population_ptr->GetAverageCost()
+		<< " - Best Cost " << best_solution->GetCost();
 	if (gap_opt)
 		std::cout << " (" << *gap_opt * 100 << "%)";
 	std::cout << std::endl;
@@ -98,17 +112,26 @@ void key(int key_id, int, int)
 	auto nsols = pplotter->GetNumberOfSolutions();
 	if (key_id == GLUT_KEY_LEFT) {
 		pplotter->SetSolution((current + nsols - 1) % nsols);
-		print_pploter_data(pplotter);
+		print_pplotter_data(pplotter);
 		display();
 	} else if (key_id == GLUT_KEY_RIGHT) {
 		pplotter->SetSolution((current + 1) % nsols);
-		print_pploter_data(pplotter);
+		print_pplotter_data(pplotter);
 		display();
-	} else if (key_id == GLUT_KEY_F9) {
+	} else if (key_id == GLUT_KEY_F1) {
 		pplotter->GetPopulation()->DoNextGeneration();
 		pplotter->SetSolution(0);
-		print_pploter_data(pplotter);
+		print_pplotter_gendata(pplotter);
 		display();
+	} else if (key_id == GLUT_KEY_F10) {
+		pplotter->SetSolution(0);
+		unsigned long long num_of_gens;
+		std::cout << "#Generations = ";
+		std::cin >> num_of_gens;
+		for (unsigned long long i = 0; i < num_of_gens; ++i) {
+			pplotter->GetPopulation()->DoNextGeneration();
+			print_pplotter_gendata(pplotter);
+		}
 	} else {
 		std::cout << "Unknown key";
 	}
@@ -183,6 +206,10 @@ int main(int argc, char** argv)
 					 "initial seed"),
 			arg::def(2020))
 
+		.bind("pop-verbose", &options_t::pop_verbose,
+			arg::doc("Allow population verbose messages?"),
+			arg::def(false))
+
 		.build();
 
 	std::shared_ptr<Instance> instance_ptr;
@@ -226,6 +253,7 @@ int main(int argc, char** argv)
 			auto population_ptr = std::make_shared<Population>(instance_ptr,
 				options.pop_minsize, options.pop_maxsize,
 				options.pop_window, options.pop_seed);
+			population_ptr->SetVerbosity(options.pop_verbose);
 			auto plotter = std::make_shared<PopulationPlotter>(population_ptr);
 			options.set_plotter(plotter);
 		} else {

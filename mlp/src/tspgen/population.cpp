@@ -1,10 +1,12 @@
-#include "..\..\include\tspgen\population.h"
 #include "population.h"
 
+#include <iostream>
 #include <cassert>
 #include <algorithm>
 #include <random>
 #include <set>
+
+#include "ls.h"
 
 Population::Population(
 	std::shared_ptr<Instance> instance_ptr,
@@ -18,6 +20,7 @@ Population::Population(
 	maxSize(maxSize),
 	matingPoolSize(2),
 	generationCount(0),
+	verbose(false),
 	rng(seed)
 {
 	for (std::size_t i = 0; i < minSize; ++i)
@@ -36,13 +39,21 @@ void Population::DoNextGeneration()
 		matingPool.push_back(btourn[firstIsBetter ? 0 : 1]);
 	}
 	/* BREEDING */
+	LocalSearch ls(rng);
 	for (std::size_t i = 1; i < matingPoolSize; ++i) {
 		auto firstParent = at(i - 1), secondParent = at(i);
 		/* CROSSOVER */
 		auto offspring = std::shared_ptr<Solution>(
 			crossover(*firstParent, *secondParent, rng));
 		/* MUTATION */
+		if (rng() % 100 < 10) {
+			if (verbose)
+				std::cout << "Mutating...\n";
+			ls.perturbSolution(*offspring, offspring->GetInstance()->GetSize() / 10);
+		}
 		/* LOCAL SEARCH */
+		ls.findLocalMinimum(*offspring);
+		/* ADD OFFSPRING */
 		AddSolution(offspring);
 	}
 	/* OVERFLOW CHECK */
@@ -54,16 +65,20 @@ void Population::DoNextGeneration()
 				if (size() - clone_indexes.size() <= minSize)
 					goto stop_finding_clones;
 				if (*at(i) == *at(j))
-					clone_indexes.insert(i);
+					clone_indexes.insert(j);
 			}
 stop_finding_clones:
-		for (auto const& index : clone_indexes)
+		for (auto const& index : clone_indexes) {
+			if (verbose)
+				std::cout << "#" << at(index)->GetId() << " is a clone!\n";
 			RemoveSolution(index);
+		}
 
 		if (size() > minSize) {
 			/* REMOVAL OF THE WORSE */
 			auto order = [this] (std::size_t a, std::size_t b) {
-				return GetSolutionCost(at(a)) < GetSolutionCost(at(b));
+				return (a != b && GetSolutionCost(at(a)) > GetSolutionCost(at(b)))
+					|| (a == b && at(a)->GetId() < at(b)->GetId());
 			};
 			std::set<std::size_t, decltype(order)> ranking(order);
 			for (std::size_t i = 0; i < size(); ++i) ranking.insert(i);
@@ -100,6 +115,11 @@ std::size_t Population::GetMatingPoolSize() const
 	return matingPoolSize;
 }
 
+void Population::SetVerbosity(bool isVerbose)
+{
+	this->verbose = isVerbose;
+}
+
 void Population::AddSolution(std::shared_ptr<Solution> sol)
 {
 	cost_map[sol] = sol->GetCost();
@@ -110,4 +130,21 @@ void Population::RemoveSolution(std::size_t index)
 {
 	cost_map.erase(at(index));
 	erase(std::next(begin(), index));
+}
+
+Cost Population::GetAverageCost() const
+{
+	double average = 0;
+	for (auto const& sol : *this)
+		average += (double) GetSolutionCost(sol) / size();
+	return (Cost) average;
+}
+
+std::shared_ptr<Solution> Population::GetBestSolution() const
+{
+	std::shared_ptr<Solution> best = at(0);
+	for (auto sol : *this)
+		if (GetSolutionCost(sol) < GetSolutionCost(best))
+			best = sol;
+	return best;
 }
