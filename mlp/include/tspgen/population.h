@@ -21,6 +21,10 @@ public:
 	void SetMatingPoolSize (std::size_t matingPoolSize);
 	std::size_t GetMatingPoolSize () const;
 
+	void SetMutationMin(double min);
+	void SetMutationMax(double max);
+	void SetMutationChance(double chance);
+
 	void SetVerbosity(bool isVerbose);
 	bool GetVerbosity() const;
 
@@ -34,5 +38,6 @@ private:
 	std::map<std::shared_ptr<Solution>, Cost> cost_map;
 	std::size_t minSize, maxSize, matingPoolSize, generationCount;
 	std::default_random_engine rng;
+	double mutation_min, mutation_max, mutation_chance;
 	bool verbose;
 };

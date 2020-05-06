@@ -42,6 +42,7 @@ public:
 	std::size_t pop_maxsize = 0;
 	std::size_t pop_window = 0;
 	unsigned int pop_seed = 0;
+	double pop_mut_min = 0, pop_mut_max = 0, pop_mut_ch = 0;
 
 	template<class T>
 	void set_plotter(std::shared_ptr<T> plotter) {
@@ -225,6 +226,18 @@ int main(int argc, char** argv)
 			arg::doc("Allow population verbose messages?"),
 			arg::def(false))
 
+		.bind("pop-mut-min", &options_t::pop_mut_min,
+			arg::doc("Mutation minimum perturbation"),
+			arg::def(0.05))
+
+		.bind("pop-mut-max", &options_t::pop_mut_max,
+			arg::doc("Mutation maximum perturbation"),
+			arg::def(0.25))
+
+		.bind("pop-mut-chance", &options_t::pop_mut_ch,
+			arg::doc("Mutation chance"),
+			arg::def(0.25))
+
 		.build();
 
 	std::shared_ptr<Instance> instance_ptr;
@@ -269,6 +282,9 @@ int main(int argc, char** argv)
 				options.pop_minsize, options.pop_maxsize,
 				options.pop_window, options.pop_seed);
 			p->SetVerbosity(options.pop_verbose);
+			p->SetMutationChance(options.pop_mut_ch);
+			p->SetMutationMin(options.pop_mut_min);
+			p->SetMutationMax(options.pop_mut_max);
 			auto plotter = std::make_shared<PopulationPlotter>(p);
 			options.set_plotter(plotter);
 		} else {

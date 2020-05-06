@@ -21,7 +21,10 @@ Population::Population(
 	matingPoolSize(2),
 	generationCount(0),
 	verbose(false),
-	rng(seed)
+	rng(seed),
+	mutation_min(0.05),
+	mutation_max(0.25),
+	mutation_chance(0.25)
 {
 	for (std::size_t i = 0; i < minSize; ++i)
 		AddSolution(std::make_shared<Solution>(instance_ptr, window, rng));
@@ -46,8 +49,8 @@ void Population::DoNextGeneration()
 		auto offspring = std::shared_ptr<Solution>(
 			crossover(*firstParent, *secondParent, rng));
 		/* MUTATION */
-		if (rng() % 100 < 10) {
-			std::uniform_real_distribution<double> unif(0.05, 0.25);
+		if (rng() % 100 < mutation_chance * 100) {
+			std::uniform_real_distribution<double> unif(mutation_min, mutation_max);
 			double perturbationFactor = unif(rng);
 			auto instanceSize = offspring->GetInstance()->GetSize();
 			std::size_t perturbationSize = (std::size_t) (instanceSize * perturbationFactor);
@@ -112,6 +115,21 @@ void Population::SetMatingPoolSize(std::size_t matingPoolSize)
 std::size_t Population::GetMatingPoolSize() const
 {
 	return matingPoolSize;
+}
+
+void Population::SetMutationMin(double min)
+{
+	this->mutation_min = min;
+}
+
+void Population::SetMutationMax(double max)
+{
+	this->mutation_max = max;
+}
+
+void Population::SetMutationChance(double chance)
+{
+	this->mutation_chance = chance;
 }
 
 void Population::SetVerbosity(bool isVerbose)
