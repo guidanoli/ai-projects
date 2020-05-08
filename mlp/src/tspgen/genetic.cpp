@@ -7,14 +7,17 @@ Genetic::Genetic(std::shared_ptr<Population> population) :
 	p(population)
 {}
 
-std::shared_ptr<Solution> Genetic::explore(StoppingCriterion stopping_criterion)
+PopulationStatus Genetic::explore(StoppingCriterion stopping_criterion)
 {
 	PopulationStatus status;
 
 	auto gen_sli = p->GetGenerationCount();
 	auto best_cost = p->GetSolutionCost(p->GetBestSolution());
 	auto start = std::chrono::steady_clock::now();
+	auto time_sli = start;
 
+	status.seconds = 0;
+	status.generations = 0;
 	status.generations_sli = 0;
 	status.seconds_sli = 0;
 	status.best_solution = p->GetBestSolution();
@@ -37,14 +40,18 @@ std::shared_ptr<Solution> Genetic::explore(StoppingCriterion stopping_criterion)
 				std::cout << std::endl;
 			}
 
-			start = std::chrono::steady_clock::now();
+			time_sli = std::chrono::steady_clock::now();
 		}
 
 		status.best_solution = p->GetBestSolution();
-		status.generations_sli = p->GetGenerationCount() - gen_sli;
+		status.generations = p->GetGenerationCount();
+		status.generations_sli = status.generations - gen_sli;
+		auto now = std::chrono::steady_clock::now();
 		status.seconds_sli = std::chrono::duration_cast<std::chrono::seconds>
-			(std::chrono::steady_clock::now() - start).count();
+			(now - time_sli).count();
+		status.seconds = std::chrono::duration_cast<std::chrono::seconds>
+			(now - start).count();
 	}
 
-	return status.best_solution;
+	return status;
 }

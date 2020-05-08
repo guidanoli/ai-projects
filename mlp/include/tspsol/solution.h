@@ -40,14 +40,17 @@ public:
 	friend std::ofstream& operator<< (std::ofstream& ofs, Solution const& s);
 
 	// neighbourhood moves
-	bool Shift (std::size_t p, std::size_t q, bool improve);
-	bool Swap (std::size_t p, std::size_t q, bool improve);
-	bool Opt2 (std::size_t p, std::size_t q, bool improve);
-	bool Shift2 (std::size_t p, std::size_t q, std::size_t r, bool improve);
+	// improve = must lower solution cost
+	// m = reference to upper bound
+	bool Shift (std::size_t p, std::size_t q, bool improve, std::size_t* m = nullptr);
+	bool Swap (std::size_t p, std::size_t q, bool improve, std::size_t* m = nullptr);
+	bool Opt2 (std::size_t p, std::size_t q, bool improve, std::size_t* m = nullptr);
+	bool Shift2 (std::size_t p, std::size_t q, std::size_t r, bool improve, std::size_t* m = nullptr);
 
 	// for debugging
 	bool IsValid () const;
 	unsigned long long GetId () const;
+	void Print() const;
 
 	// crossover -- assumes solution come from the same instance
 	friend Solution* crossover(Solution const& sa, Solution const& sb,

@@ -1,1 +1,1 @@
-target_link_libraries(solverapp argparserlib iparserlib tspsollib tspilslib tspgenlib)
+target_link_libraries(solverapp argparserlib iparserlib tspsollib tspilslib tspgenlib csvlib)

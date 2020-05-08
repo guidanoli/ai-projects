@@ -22,9 +22,9 @@ Population::Population(
 	generationCount(0),
 	verbose(false),
 	rng(seed),
-	mutation_min(0.05),
-	mutation_max(0.25),
-	mutation_chance(0.25)
+	mutation_min(0),
+	mutation_max(0.1),
+	mutation_chance(1)
 {
 	for (std::size_t i = 0; i < minSize; ++i)
 		AddSolution(std::make_shared<Solution>(instance_ptr, window, rng));

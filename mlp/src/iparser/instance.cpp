@@ -20,7 +20,7 @@ bool Instance::IsValid() const
 			std::cerr << "Invalid gamma K.\n";
 			return false;
 		}
-		for (std::size_t i = 0; i < n; ++i) {
+		for (Node i = 0; i < n; ++i) {
 			auto const v = gammaset->getClosestNeighbours(i);
 			if (v.size() != k) {
 				std::cerr << "Gamma subset not with size K.\n";

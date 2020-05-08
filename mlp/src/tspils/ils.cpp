@@ -10,21 +10,21 @@ std::size_t getPertubationSize(double perturbation, std::size_t n) {
 	return std::clamp(perturbationSize, (std::size_t) 1, n);
 }
 
-Solution IteratedLocalSearch::explore (Solution const& initial_solution,
+IterationStatus IteratedLocalSearch::explore (Solution const& initial_solution,
                                        double perturbation,
                                        unsigned long long ils_decay_factor,
                                        StoppingCriterion stopping_criterion)
 {
 	LocalSearch ls(seed);
-	Solution solution(initial_solution);
+	auto solution = std::make_shared<Solution>(initial_solution);
 
 	double initial_perturbation = perturbation;
-	std::size_t n = solution.GetInstance()->GetSize();
+	std::size_t n = solution->GetInstance()->GetSize();
 	std::size_t perturbationSize = getPertubationSize(perturbation, n);
 
-	ls.findLocalMinimum(solution);
-	Solution bestSolution(solution);
-	auto bestCost = bestSolution.GetCost();
+	ls.findLocalMinimum(*solution);
+	auto bestSolution = std::make_shared<Solution>(*solution);
+	auto bestCost = bestSolution->GetCost();
 	auto currCost = bestCost;
 
 	auto const t_start = std::chrono::steady_clock::now();
@@ -36,15 +36,15 @@ Solution IteratedLocalSearch::explore (Solution const& initial_solution,
 
 	while (!stopping_criterion(status)) {
 
-		ls.perturbSolution(solution, perturbationSize);
-		ls.findLocalMinimum(solution);
-		currCost = solution.GetCost();
+		ls.perturbSolution(*solution, perturbationSize);
+		ls.findLocalMinimum(*solution);
+		currCost = solution->GetCost();
 
 		auto const t_now = std::chrono::steady_clock::now();
 
 		if (bestCost > currCost) {
 			t_last_improvement = t_now;
-			bestSolution = Solution(solution);
+			bestSolution = std::make_shared<Solution>(*solution);
 			bestCost = currCost;
 			status.t_last_improvement = 0;
 			status.iteration_id = 0;
@@ -60,13 +60,15 @@ Solution IteratedLocalSearch::explore (Solution const& initial_solution,
 			std::chrono::duration_cast<std::chrono::seconds>
 			(t_now - t_start).count();
 
+		status.t = t_total;
+
 		if (ils_decay_factor != 0) {
 			perturbation = initial_perturbation
-				* exp2(- (double) t_total / (double) ils_decay_factor);
+				* exp2(- (double) status.iteration_id / (double) ils_decay_factor);
 			perturbationSize = getPertubationSize(perturbation, n);
 			status.perturbationSize = perturbationSize;
 		}
 	}
-	
-	return bestSolution;
+
+	return status;
 }

@@ -41,6 +41,7 @@ public:
 	std::size_t pop_minsize = 0;
 	std::size_t pop_maxsize = 0;
 	std::size_t pop_window = 0;
+	std::size_t pop_pool_size = 0;
 	unsigned int pop_seed = 0;
 	double pop_mut_min = 0, pop_mut_max = 0, pop_mut_ch = 0;
 
@@ -227,16 +228,16 @@ int main(int argc, char** argv)
 			arg::def(false))
 
 		.bind("pop-mut-min", &options_t::pop_mut_min,
-			arg::doc("Mutation minimum perturbation"),
-			arg::def(0.05))
+			arg::doc("Mutation minimum perturbation"))
 
 		.bind("pop-mut-max", &options_t::pop_mut_max,
-			arg::doc("Mutation maximum perturbation"),
-			arg::def(0.25))
+			arg::doc("Mutation maximum perturbation"))
 
 		.bind("pop-mut-chance", &options_t::pop_mut_ch,
-			arg::doc("Mutation chance"),
-			arg::def(0.25))
+			arg::doc("Mutation chance"))
+
+		.bind("pop-mat-pool-size", &options_t::pop_pool_size,
+			arg::doc("Mating Pool Size"))
 
 		.build();
 
@@ -282,9 +283,14 @@ int main(int argc, char** argv)
 				options.pop_minsize, options.pop_maxsize,
 				options.pop_window, options.pop_seed);
 			p->SetVerbosity(options.pop_verbose);
-			p->SetMutationChance(options.pop_mut_ch);
-			p->SetMutationMin(options.pop_mut_min);
-			p->SetMutationMax(options.pop_mut_max);
+			if (options.pop_pool_size)
+				p->SetMatingPoolSize(options.pop_pool_size);
+			if (options.pop_mut_ch != 0.0)
+				p->SetMutationChance(options.pop_mut_ch);
+			if (options.pop_mut_min != 0.0)
+				p->SetMutationMin(options.pop_mut_min);
+			if (options.pop_mut_max != 0.0)
+				p->SetMutationMax(options.pop_mut_max);
 			auto plotter = std::make_shared<PopulationPlotter>(p);
 			options.set_plotter(plotter);
 		} else {

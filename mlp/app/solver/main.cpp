@@ -7,6 +7,8 @@
 #include "genetic.h"
 #include "population.h"
 
+#include "csv.h"
+
 #include "iparser.h"
 #include "argparser.h"
 #include "solution.h"
@@ -29,8 +31,8 @@ struct options_t
 	std::string ifolder;
 	std::string sfile;
 	std::string heuristic;
-	unsigned long long max_iterations = 0;
-	unsigned long long max_seconds = 0;
+	unsigned long long max_iterations_sli = 0;
+	unsigned long long max_seconds_sli = 0;
 	
 	unsigned int seed = 0;
 	std::size_t gammak = 0;
@@ -46,30 +48,36 @@ struct options_t
 	std::size_t gen_maxsize = 0;
 	std::size_t gen_window = 0;
 	std::size_t gen_mating_pool_size = 0;
+	std::size_t gen_max_generations_sli = 0;
 	std::size_t gen_max_generations = 0;
+	unsigned long long gen_max_seconds = 0;
 
+	std::string csvpath;
 	std::string savefolder;
 	std::string savefilename;
 
+	char csvDecimalSeparator = 0;
+	std::unique_ptr<csv::writer> csvWriter;
+
 	bool stop_ils(IterationStatus const& status) const {
 		if (validate &&
-			!status.solution.IsValid()) {
+			!status.solution->IsValid()) {
 			std::cout << "Solution isn't valid.\n";
 			return true;
 		}
-		if (max_iterations &&
-			status.iteration_id > max_iterations) {
-			std::cout << "Exceeded maximum iteration count of "
-				<< max_iterations << std::endl;
+		if (max_iterations_sli &&
+			status.iteration_id > max_iterations_sli) {
+			std::cout << "Exceeded maximum iteration count s.l.i. of "
+				<< max_iterations_sli << std::endl;
 			return true;
 		}
-		if (max_seconds &&
-			status.t_last_improvement > max_seconds) {
-			std::cout << "Exceeded maximum elapsed time of "
-				<< max_seconds << " seconds\n";
+		if (max_seconds_sli &&
+			status.t_last_improvement > max_seconds_sli) {
+			std::cout << "Exceeded maximum elapsed time s.l.i. of "
+				<< max_seconds_sli << " s\n";
 			return true;
 		}
-		auto gap_opt = status.solution.GetCostGap();
+		auto gap_opt = status.solution->GetCostGap();
 		if (gap_opt && *gap_opt >= gap_threshhold) {
 			std::cout << "Exceeded gap threshhold of "
 				<< gap_threshhold * 100 << "%\n";
@@ -81,7 +89,7 @@ struct options_t
 		}
 		if (verbose) {
 			std::cout << "Phi = " << status.perturbationSize << " ";
-			print_gap(status.solution);
+			print_gap(*(status.solution));
 		}
 		return false;
 	}
@@ -92,16 +100,28 @@ struct options_t
 			std::cout << "Solution isn't valid.\n";
 			return true;
 		}
-		if (max_iterations &&
-			status.generations_sli > gen_max_generations) {
+		if (gen_max_generations_sli &&
+			status.generations_sli > gen_max_generations_sli) {
+			std::cout << "Exceeded maximum generation s.l.i. count of "
+				<< gen_max_generations_sli << std::endl;
+			return true;
+		}
+		if (max_seconds_sli &&
+			status.seconds_sli > max_seconds_sli) {
+			std::cout << "Exceeded maximum elapsed time s.l.i. of "
+				<< max_seconds_sli << " s\n";
+			return true;
+		}
+		if (gen_max_generations &&
+			status.generations > gen_max_generations) {
 			std::cout << "Exceeded maximum generation count of "
 				<< gen_max_generations << std::endl;
 			return true;
 		}
-		if (max_seconds &&
-			status.seconds_sli > max_seconds) {
+		if (gen_max_seconds &&
+			status.seconds > gen_max_seconds) {
 			std::cout << "Exceeded maximum elapsed time of "
-				<< max_seconds << " seconds\n";
+				<< max_seconds_sli << " s\n";
 			return true;
 		}
 		auto gap_opt = status.best_solution->GetCostGap();
@@ -113,22 +133,38 @@ struct options_t
 		return false;
 	}
 
-	bool solve(Solution &solution) const {
+	void print_ils_status(IterationStatus const& status) {
+		print_gap(*(status.solution));
+		std::cout << "Total time = " << status.t << " s\n";
+		write_csv_line(status.solution->GetInstance()->GetName(),
+			status.solution->GetCostGap(),
+			status.t);
+	}
+
+	void print_gen_status(PopulationStatus const& status) {
+		print_gap(*(status.best_solution));
+		std::cout << "Total time = " << status.seconds << " s\n";
+		write_csv_line(status.best_solution->GetInstance()->GetName(),
+			status.best_solution->GetCostGap(),
+			status.seconds);
+	}
+
+	bool solve(Solution &solution) {
 		if (heuristic == "ils") {
 			IteratedLocalSearch ils(seed);
 			std::cout << "Starting ILS...\n";
-			auto end_solution = ils.explore(solution,
+			auto status = ils.explore(solution,
 				ils_perturbation_factor,
 				ils_decay_factor,
-				[*this](IterationStatus const& status) {
+				[this](IterationStatus const& status) {
 				return stop_ils(status);
 			});
 			std::cout << "End of ILS...\n";
-			print_gap(end_solution);
+			print_ils_status(status);
 			if (does_save) {
 				std::cout << "Saving solution in "
 					<< savefolder << "/" << savefilename << std::endl;
-				if (!save(end_solution))
+				if (!save(*(status.solution)))
 					std::cerr << "It was not possible to save solution.\n";
 			}
 		} else if (heuristic == "gen") {
@@ -139,16 +175,16 @@ struct options_t
 			pop->SetMatingPoolSize(gen_mating_pool_size);
 			auto gen = Genetic(pop);
 			std::cout << "Starting GEN...\n";
-			auto end_solution = gen.explore(
-				[*this] (PopulationStatus const& status) {
+			auto status = gen.explore(
+				[this] (PopulationStatus const& status) {
 				return stop_gen(status);
 			});
 			std::cout << "End of GEN...\n";
-			print_gap(*end_solution);
+			print_gen_status(status);
 			if (does_save) {
 				std::cout << "Saving solution in "
 					<< savefolder << "/" << savefilename << std::endl;
-				if (!save(*end_solution))
+				if (!save(*(status.best_solution)))
 					std::cerr << "It was not possible to save solution.\n";
 			}
 		} else {
@@ -168,6 +204,48 @@ struct options_t
 	void print_gap(Solution const& solution) const {
 		auto gap_opt = solution.GetCostGap();
 		if (gap_opt) std::cout << "Gap = " << *gap_opt * 100 << "%\n";
+	}
+
+	void write_csv_ils_info() {
+		if (!csvWriter) return;
+		*csvWriter << "Heuristic" << "Iterated Local Search" << csv::nl
+			<< "Iterations SLI (0 = undefined)" << max_iterations_sli << csv::nl
+			<< "Time SLI (0 = undefined)" << max_seconds_sli << csv::nl
+			<< "Decay Factor" << ils_decay_factor << csv::nl
+			<< "Perturbation Factor (%)" << ils_perturbation_factor << csv::nl;
+	}
+
+	void write_csv_gen_info() {
+		if (!csvWriter) return;
+		*csvWriter << "Heuristic" << "Genetic" << csv::nl
+			<< "Generations MAX (0 = undefined)" << gen_max_generations << csv::nl
+			<< "Generations SLI (0 = undefined)" << gen_max_generations_sli << csv::nl
+			<< "Time MAX (0 = undefined)" << gen_max_seconds << csv::nl
+			<< "Time SLI (0 = undefined)" << max_seconds_sli << csv::nl
+			<< "Mating Pool Size" << gen_mating_pool_size << csv::nl
+			<< "Neighbourhood Window" << gen_window << csv::nl
+			<< "Population MIN" << gen_minsize << csv::nl
+			<< "Population MAX" << gen_maxsize << csv::nl;
+	}
+
+	void write_csv_header() {
+		if (!csvWriter) return;
+		*csvWriter << "Seed" << seed << csv::nl
+			<< "Gamma K (0 = using default, 30)" << gammak << csv::nl
+			<< "Gap Threshhold" << gap_threshhold << csv::nl
+			<< "Instance" << "Gap (%)" << "Time (s)" << csv::nl;
+	}
+
+	void write_csv_line(std::string instanceName,
+		std::optional<double> gap_opt,
+		unsigned long long time) {
+		if (!csvWriter) return;
+		*csvWriter << instanceName;
+		if (gap_opt)
+			*csvWriter << *gap_opt;
+		else
+			*csvWriter << csv::nc;
+		*csvWriter << time << csv::nl;
 	}
 };
 
@@ -212,18 +290,17 @@ int main(int argc, char** argv)
 			arg::doc("Pertubation factor of ILS"),
 			arg::def(0.25f))
 
-		.bind("max-iterations", &options_t::max_iterations,
+		.bind("max-iterations", &options_t::max_iterations_sli,
 			arg::doc("Maximum number of iterations/generations since last improved"),
 			arg::def(1000))
 
-		.bind("max-seconds", &options_t::max_seconds,
+		.bind("max-seconds", &options_t::max_seconds_sli,
 			arg::doc("Maximum time elapsed (in seconds) since last improved"))
 
 		.bind("decay", &options_t::ils_decay_factor,
-			arg::doc("Decay time. After this time, the perturbation size "
-				     "decreases by ~63%. If zero, perturbation size will be "
-			         "the same throughout the local search"),
-			arg::def(30))
+			arg::doc("Decay factor. After this many iterations, the "
+			         "perturbation size decreases by ~63%."),
+			arg::def(8))
 
 		.bind("gamma-k", &options_t::gammak,
 			arg::doc("Gamma set size"))
@@ -234,7 +311,7 @@ int main(int argc, char** argv)
 		.bind("gen-window", &options_t::gen_window,
 			arg::doc("Window of neighbours in random greedy construction "
 			         "heuristic used in the genetic algorithm"),
-			arg::def(3))
+			arg::def(10))
 
 		.bind("gen-mating-pool-size", &options_t::gen_mating_pool_size,
 			arg::doc("Genetic algorithm mating pool size"),
@@ -242,18 +319,44 @@ int main(int argc, char** argv)
 
 		.bind("gen-min-size", &options_t::gen_minsize,
 			arg::doc("Genetic algorithm minimum population size"),
-			arg::def(15))
+			arg::def(10))
 
 		.bind("gen-max-size", &options_t::gen_maxsize,
 			arg::doc("Genetic algorithm maximum population size"),
 			arg::def(20))
 
-		.bind("gen-max-generations", &options_t::gen_max_generations,
+		.bind("gen-max-generations-sli", &options_t::gen_max_generations_sli,
 			arg::doc("Genetic algorithm maximum number of generations since "
 			         "last improved"),
-			arg::def(3000))
+			arg::def(50))
+
+		.bind("gen-max-generations", &options_t::gen_max_generations,
+			arg::doc("Genetic algorithm maximum number of generations"))
+
+		.bind("gen-max-seconds", &options_t::gen_max_seconds,
+			arg::doc("Genetic algorithm maximum elapsed time"))
+
+		.bind("csv-path", &options_t::csvpath,
+			arg::doc("Path to CSV file with results"))
+
+		.bind("csv-decimal-separator", &options_t::csvDecimalSeparator,
+			arg::doc("Decimal separator in CSV files"),
+			arg::def(','))
 
 		.build();
+	
+	if (!options.csvpath.empty()) {
+		options.csvWriter = std::make_unique<csv::writer>(
+			std::string(DATAPATH) + "/" + options.csvpath + "/" +
+			std::to_string(options.seed) + ".csv");
+		options.csvWriter->setDecimalSep(options.csvDecimalSeparator);
+		if (options.heuristic == "ils") {
+			options.write_csv_ils_info();
+		} else if (options.heuristic == "gen") {
+			options.write_csv_gen_info();
+		}
+		options.write_csv_header();
+	}
 
 	if (!options.ifile.empty()) {
 		std::string ifilepath = std::string(DATAPATH) + "/" + options.ifile;

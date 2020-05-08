@@ -13,7 +13,7 @@ unsigned long long Solution::_count = 0;
 Solution::Solution() : _id(_count++) {}
 
 Solution::Solution (Solution const& solution) :
-	std::list<std::size_t>(solution),
+	std::list<Node>(solution),
 	latency_map(solution.latency_map),
 	instance_ptr(solution.instance_ptr),
 	_id(_count++)
@@ -165,21 +165,21 @@ std::ifstream& operator>> (std::ifstream& ifs, Solution& s)
 	s.push_back(0); // initial depot
 	auto n = (*instance_ptr_opt)->GetSize();
 	std::vector<bool> added_nodes(n - 1, false);
-	for (std::size_t i = 1; i < n; ++i) {
-		std::size_t nodei;
+	for (Node i = 1; i < n; ++i) {
+		Node nodei;
 		if (!(ifs >> nodei))
 			return ifs;  // I/O error
 		if (nodei < 1 || nodei > n - 1) {
 			std::cerr << "Node out of bounds.\n";
 			ifs.setstate(std::ios::failbit);
 			return ifs; // Logic error
-		} else if (added_nodes[nodei - 1]) {
+		} else if (added_nodes[(std::size_t) nodei - 1]) {
 			std::cerr << "Repeated node.\n";
 			ifs.setstate(std::ios::failbit);
 			return ifs; // Logic error
 		}
 		s.push_back(nodei);
-		added_nodes[nodei - 1] = true;
+		added_nodes[(std::size_t) nodei - 1] = true;
 	}
 	s.push_back(0); // final depot
 	s.latency_map = std::vector<Cost>(n + 1);
@@ -278,7 +278,15 @@ unsigned long long Solution::GetId() const
 	return _id;
 }
 
-bool Solution::Shift (std::size_t p, std::size_t q, bool improve)
+void Solution::Print() const
+{
+	std::cout << "[";
+	for (auto const& si : *this)
+		std::cout << " " << si;
+	std::cout << " ]\n";
+}
+
+bool Solution::Shift (std::size_t p, std::size_t q, bool improve, std::size_t* m)
 {
 	auto n = instance_ptr->GetSize();
 
@@ -286,11 +294,12 @@ bool Solution::Shift (std::size_t p, std::size_t q, bool improve)
 	if (n < 3) return false;
 
 	/* Filtering arbitrary input
-	* such that 0 < p < q < n */
-	p = (p % (n - 1)) + 1;
-	q = (q % (n - 1)) + 1;
+	* such that 0 < p, q < n */
+	if (p <= 0 || p >= n) return false;
+	if (q <= 0 || q >= n) return false;
 	if (p == q) return false;
-
+	if (m && std::max(p, q) < *m) return false;
+	
 	Node np = Get(p), nq = Get(q);
 
 	if (improve) {
@@ -355,12 +364,14 @@ bool Solution::Shift (std::size_t p, std::size_t q, bool improve)
 	insert(std::next(begin(), q), np);
 
 	/* Update distance map */
-	recalculateLatencyMap(std::min(p, q));
+	auto lb = std::min(p, q);
+	recalculateLatencyMap(lb);
 
+	if (m) *m = lb - 1;
 	return true;
 }
 
-bool Solution::Swap(std::size_t p, std::size_t q, bool improve)
+bool Solution::Swap(std::size_t p, std::size_t q, bool improve, std::size_t *m)
 {
 	auto n = instance_ptr->GetSize();
 
@@ -369,11 +380,12 @@ bool Solution::Swap(std::size_t p, std::size_t q, bool improve)
 
 	/* Filtering arbitrary input
 	* such that 0 < p < q < n */
-	p = (p % (n - 1)) + 1;
-	q = (q % (n - 1)) + 1;
+	if (p <= 0 || p >= n) return false;
+	if (q <= 0 || q >= n) return false;
 	if (p == q) return false;
 	if (p > q) std::swap(p, q);
-
+	if (m && std::max(p, q) < *m) return false;
+	
 	/* The same as shift(p,q) */
 	if (q == p + 1) return false;
 
@@ -413,10 +425,11 @@ bool Solution::Swap(std::size_t p, std::size_t q, bool improve)
 	/* Update distance map */
 	recalculateLatencyMap(p);
 
+	if (m) *m = p - 1;
 	return true;
 }
 
-bool Solution::Opt2(std::size_t p, std::size_t q, bool improve)
+bool Solution::Opt2(std::size_t p, std::size_t q, bool improve, std::size_t* m)
 {
 	auto n = instance_ptr->GetSize();
 
@@ -425,11 +438,12 @@ bool Solution::Opt2(std::size_t p, std::size_t q, bool improve)
 
 	/* Filtering arbitrary input
 	* such that 0 < p < q < n */
-	p = (p % (n - 1)) + 1;
-	q = (q % (n - 1)) + 1;
+	if (p <= 0 || p >= n) return false;
+	if (q <= 0 || q >= n) return false;
 	if (p == q) return false;
 	if (p > q) std::swap(p, q);
-
+	if (m && std::max(p, q) < *m) return false;
+	
 	/* The same as shift(p,q) */
 	if (q == p + 1) return false;
 
@@ -475,10 +489,11 @@ bool Solution::Opt2(std::size_t p, std::size_t q, bool improve)
 
 	recalculateLatencyMap(p);
 
+	if (m) *m = p - 1;
 	return true;
 }
 
-bool Solution::Shift2(std::size_t p, std::size_t q, std::size_t r, bool improve)
+bool Solution::Shift2(std::size_t p, std::size_t q, std::size_t r, bool improve, std::size_t* m)
 {
 	auto n = instance_ptr->GetSize();
 
@@ -486,12 +501,14 @@ bool Solution::Shift2(std::size_t p, std::size_t q, std::size_t r, bool improve)
 	if (n < 4) return false;
 
 	/* Filtering arbitrary input
-	* such that 0 < p < q < r < n */
-	p = (p % (n - 1)) + 1;
-	q = (q % (n - 1)) + 1;
-	r = (r % (n - 1)) + 1;
+	* such that 0 < p < q < r < n
+	* or 0 < r < p < q < n */
+	if (p <= 0 || p >= n) return false;
+	if (q <= 0 || q >= n) return false;
+	if (r <= 0 || r >= n) return false;
 	if (p == q) return false;
 	if (p > q) std::swap(p, q);
+	if (m && std::max(p, q) < *m) return false;
 
 	if (r > q) {
 
@@ -583,5 +600,6 @@ bool Solution::Shift2(std::size_t p, std::size_t q, std::size_t r, bool improve)
 		return false;
 	}
 
+	if (m) *m = std::min(r, p) - 1;
 	return true;
 }
