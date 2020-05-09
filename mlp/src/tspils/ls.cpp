@@ -1,5 +1,6 @@
 #include "ls.h"
 
+#include <iostream>
 #include <algorithm>
 
 LocalSearch::LocalSearch(std::default_random_engine& rng)
@@ -27,6 +28,15 @@ struct ls_state
 
 		return a.r < b.r;
 	}
+
+	void clear()
+	{
+		i = 0;
+		j = 0;
+		r = 0;
+		nl = 0;
+	}
+
 	std::size_t i = 0, j = 0, r = 0;
 	int nl = 0;
 };
@@ -50,54 +60,68 @@ int LocalSearch::findLocalMinimum(Solution& solution)
 	std::shuffle(r_order.begin(), r_order.end(), rng);
 
 	bool improved_once = false;
-	std::size_t M = 0;
-	ls_state MS, S;
-	while (S.nl < neighbourhood_level_cnt) {
+	ls_state curr_state, prev_improv, last_improv;
+	std::size_t LB = 0, UB = n;
+	while (curr_state.nl < neighbourhood_level_cnt) {
 		improved_once = false;
-		for (S.i = 0; S.i < n - 1; ++S.i) {
-			auto ni = ni_order[S.i];
+		for (curr_state.i = 0; curr_state.i < n - 1; ++curr_state.i) {
+			auto ni = ni_order[curr_state.i];
 			auto const& ni_neighbours = gammaset->getClosestNeighbours(ni);
 			auto i = solution.GetIndexOf(ni);
-			for (S.j = 0; S.j < k; ++S.j) {
-				auto nj_ = j_order[S.j];
+			for (curr_state.j = 0; curr_state.j < k; ++curr_state.j) {
+				auto nj_ = j_order[curr_state.j];
 				auto nj = ni_neighbours[nj_];
 				bool improved = false;
 				auto j = solution.GetIndexOf(nj);
-				std::size_t currM = 0;
-				std::size_t* ub_ptr = (S < MS) ? &M : &currM;
-				switch (S.nl) {
+				std::size_t lb_temp = 0, ub_temp = n;
+				std::size_t* lb_ptr = nullptr;
+				std::size_t* ub_ptr = nullptr;
+				if (curr_state < last_improv && prev_improv < curr_state) {
+					lb_ptr = &LB;
+					ub_ptr = &UB;
+				} else {
+					lb_ptr = &lb_temp;
+					ub_ptr = &ub_temp;
+				}
+				switch (curr_state.nl) {
 				case 0:
-					improved = solution.Shift(i, j, true, ub_ptr);
+					improved = solution.Shift(i, j, true, lb_ptr, ub_ptr);
 					break;
 				case 1:
-					improved = solution.Opt2(i, j, true, ub_ptr);
+					improved = solution.Opt2(i, j, true, lb_ptr, ub_ptr);
 					break;
 				case 2:
-					improved = solution.Swap(i, j, true, ub_ptr);
+					improved = solution.Swap(i, j, true, lb_ptr, ub_ptr);
 					break;
 				case 3:
-					for (S.r = 0; S.r < k; ++S.r) {
-						auto nr_ = r_order[S.r];
+					for (curr_state.r = 0; curr_state.r < k; ++curr_state.r) {
+						auto nr_ = r_order[curr_state.r];
 						auto nr = ni_neighbours[nr_];
 						auto r = solution.GetIndexOf(nr);
-						improved = solution.Shift2(i, j, r, true, ub_ptr);
+						improved = solution.Shift2(i, j, r, true, lb_ptr, ub_ptr);
 						if (improved) break;
 					}
 					break;
 				}
 				if (improved) {
-					if (currM > M)
-						M = currM;
-					MS = S;
-					S.nl = 0;
-					S.r = 0;
+					LB = lb_temp;
+					UB = ub_temp;
+
+					if (curr_state < last_improv)
+						prev_improv.clear(); // goes to '0'
+					else
+						prev_improv = last_improv;
+
+					last_improv = curr_state;
+					curr_state.nl = 0;
+					curr_state.r = 0;
 					improved_once = true;
 					++improvementCount;
 				}
 			}
 		}
 		if (!improved_once) {
-			++S.nl;
+			++curr_state.nl;
 		}
 	}
 	return improvementCount;

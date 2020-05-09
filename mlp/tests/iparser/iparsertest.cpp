@@ -76,20 +76,36 @@ struct options_t
 				}
 				std::cout << "Must improve? ";
 				std::cin >> must_improve;
+				std::size_t lb, ub;
+				int temp;
+				std::size_t* lb_ptr = nullptr, * ub_ptr = nullptr;
+				std::cout << "Lower bound (or -1)? ";
+				std::cin >> temp;
+				if (temp >= 0) {
+					lb = temp;
+					lb_ptr = &lb;
+				}
+				std::cout << "Upper bound (or -1)? ";
+				std::cin >> temp;
+				if (temp >= 0) {
+					ub = temp;
+					ub_ptr = &ub;
+				}
+
 				bool applied;
 
 				switch (opt) {
 				case 1:
-					applied = solution.Shift(p, q, must_improve);
+					applied = solution.Shift(p, q, must_improve, lb_ptr, ub_ptr);
 					break;
 				case 2:
-					applied = solution.Swap(p, q, must_improve);
+					applied = solution.Swap(p, q, must_improve, lb_ptr, ub_ptr);
 					break;
 				case 3:
-					applied = solution.Opt2(p, q, must_improve);
+					applied = solution.Opt2(p, q, must_improve, lb_ptr, ub_ptr);
 					break;
 				case 4:
-					applied = solution.Shift2(p, q, r, must_improve);
+					applied = solution.Shift2(p, q, r, must_improve, lb_ptr, ub_ptr);
 					break;
 				default:
 					std::cerr << "Invalid option\n";
@@ -97,6 +113,10 @@ struct options_t
 				}
 
 				std::cout << ">>> " << (applied ? "" : "not ") << "applied\n\n";
+				if (lb_ptr)
+					std::cout << "New lower bound = " << *lb_ptr << std::endl;
+				if (ub_ptr)
+					std::cout << "New upper bound = " << *ub_ptr << std::endl;
 				if (applied)
 					dump(solution);
 			}
@@ -106,17 +126,13 @@ struct options_t
 	void dump(Solution const& solution)
 	{
 		std::cout << "--------------------\n";
-		std::cout << "Order = [ ";
-		for (auto const& node : solution)
-			std::cout << node << " ";
-		std::cout << "]\n";
+		std::cout << "Order = ";
+		solution.Print();
 		auto n = solution.size();
 		std::cout << "Size = " << n << std::endl;
 		std::cout << "Cost = " << solution.GetCost() << std::endl;
-		std::cout << "Latencies = [ ";
-		for (std::size_t i = 0; i < n; ++i)
-			std::cout << solution.GetLatencyAt(i) << " ";
-		std::cout << "]\n";
+		std::cout << "Latencies = ";
+		solution.PrintLatencyMap();
 		std::cout << "--------------------\n\n";
 	}
 };

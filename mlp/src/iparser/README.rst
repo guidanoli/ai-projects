@@ -1,7 +1,7 @@
-iparser
-=======
+iparserlib
+==========
 
-Parses instance files into C++ data structures.
+Parses instance files to C++ data structures.
 
 .. warning::
    This parser is **incomplete**. Its features are
@@ -24,16 +24,16 @@ Instance
 --------
 
 Other than the repetitive Getters, the class also contains
-a handy-dandy opreator[], which acts directly in the distance
-matrix (see the section 'Data Structures'). Also, you can
-get the matrix size, or, in other terms, the number of
-vertices in the graph by the Instance::GetSize method.
+a handy-dandy [] operator, which acts directly in the distance
+matrix (see the section 'ds.h').
+You can also get the matrix size, or, in other terms, the number
+of nodes in the graph by the Instance::GetSize method.
 
 ds.h
 ----
 
-This module also defined some data structures
-for defining the instance representation.
+This module defines some data structures
+used in the instance representation.
 
 The instance is represented by a square matrix
 in which the element aij contains the distance
@@ -47,8 +47,7 @@ turns out to be sufficiently generic for this problem.
 This module actually defines some other fields
 for the instance class since these are also present
 in the instance file format, but don't influence in
-any way whatsoever in the solving part of this
-problem.
+any way whatsoever in the problem solving part.
 
 These fields include:
 
@@ -69,6 +68,14 @@ defines.h
 For defined constants throughout all files. Mostly for
 not having to worry about changing these parameters in
 the future.
+
+gammaset.h
+----------
+
+Defines a gamma set, which is the set of all the nodes
+nearest to a given node. This is used to optmize the
+local searches, restricting the neighbourhood space
+only to the closest neighbourhood.
 
 Tested instances
 ----------------

@@ -1,5 +1,5 @@
-bksparser
-=========
+bksparserlib
+============
 
 This library intends to parse a bks file, which follows the
 following grammar:
@@ -9,7 +9,8 @@ line = instance_name sep bks
 
 ... where instance_name is the NAME field of the instance
 
-... and sep is a regex for '[ \t]+'
+... and sep is a regex for [ \t]+ - that is, one or more
+    separation characters, which are spaces or tabs.
 
 ... and bks is a positive integer.
 

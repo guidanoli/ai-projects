@@ -286,7 +286,15 @@ void Solution::Print() const
 	std::cout << " ]\n";
 }
 
-bool Solution::Shift (std::size_t p, std::size_t q, bool improve, std::size_t* m)
+void Solution::PrintLatencyMap() const
+{
+	std::cout << "[";
+	for (auto const& li : latency_map)
+		std::cout << " " << li;
+	std::cout << " ]\n";
+}
+
+bool Solution::Shift (std::size_t p, std::size_t q, bool improve, std::size_t* lb, std::size_t* ub)
 {
 	auto n = instance_ptr->GetSize();
 
@@ -298,7 +306,13 @@ bool Solution::Shift (std::size_t p, std::size_t q, bool improve, std::size_t* m
 	if (p <= 0 || p >= n) return false;
 	if (q <= 0 || q >= n) return false;
 	if (p == q) return false;
-	if (m && std::max(p, q) < *m) return false;
+
+	auto const max = std::max(p, q);
+	auto const min = std::min(p, q);
+
+	/* Check lower and upper bounds */
+	if (lb && max < *lb) return false;
+	if (ub && min > *ub) return false;
 	
 	Node np = Get(p), nq = Get(q);
 
@@ -363,15 +377,17 @@ bool Solution::Shift (std::size_t p, std::size_t q, bool improve, std::size_t* m
 	remove(np);
 	insert(std::next(begin(), q), np);
 
-	/* Update distance map */
-	auto lb = std::min(p, q);
-	recalculateLatencyMap(lb);
+	/* Update latency map */
+	recalculateLatencyMap(min);
 
-	if (m) *m = lb - 1;
+	/* Update lower and upper bounds */
+	if (lb) *lb = min - 1;
+	if (ub) *ub = max + 1;
+
 	return true;
 }
 
-bool Solution::Swap(std::size_t p, std::size_t q, bool improve, std::size_t *m)
+bool Solution::Swap(std::size_t p, std::size_t q, bool improve, std::size_t* lb, std::size_t *ub)
 {
 	auto n = instance_ptr->GetSize();
 
@@ -384,7 +400,10 @@ bool Solution::Swap(std::size_t p, std::size_t q, bool improve, std::size_t *m)
 	if (q <= 0 || q >= n) return false;
 	if (p == q) return false;
 	if (p > q) std::swap(p, q);
-	if (m && std::max(p, q) < *m) return false;
+
+	/* Check lower and upper bounds */
+	if (lb && q < *lb) return false;
+	if (ub && p > *ub) return false;
 	
 	/* The same as shift(p,q) */
 	if (q == p + 1) return false;
@@ -422,14 +441,17 @@ bool Solution::Swap(std::size_t p, std::size_t q, bool improve, std::size_t *m)
 	std::swap(*std::next(begin(), p),
 	          *std::next(begin(), q));
 
-	/* Update distance map */
+	/* Update latency map */
 	recalculateLatencyMap(p);
 
-	if (m) *m = p - 1;
+	/* Update lower and upper bounds */
+	if (lb) *lb = p - 1;
+	if (ub) *ub = q + 1;
+
 	return true;
 }
 
-bool Solution::Opt2(std::size_t p, std::size_t q, bool improve, std::size_t* m)
+bool Solution::Opt2(std::size_t p, std::size_t q, bool improve, std::size_t* lb, std::size_t* ub)
 {
 	auto n = instance_ptr->GetSize();
 
@@ -442,7 +464,10 @@ bool Solution::Opt2(std::size_t p, std::size_t q, bool improve, std::size_t* m)
 	if (q <= 0 || q >= n) return false;
 	if (p == q) return false;
 	if (p > q) std::swap(p, q);
-	if (m && std::max(p, q) < *m) return false;
+
+	/* Check lower and upper bounds */
+	if (lb && q < *lb) return false;
+	if (ub && p > *ub) return false;
 	
 	/* The same as shift(p,q) */
 	if (q == p + 1) return false;
@@ -487,13 +512,17 @@ bool Solution::Opt2(std::size_t p, std::size_t q, bool improve, std::size_t* m)
 	std::reverse(std::next(begin(), p),
 	             std::next(begin(), q+1));
 
+	/* Update latency map */
 	recalculateLatencyMap(p);
 
-	if (m) *m = p - 1;
+	/* Update lower and upper bounds */
+	if (lb) *lb = p - 1;
+	if (ub) *ub = q + 1;
+
 	return true;
 }
 
-bool Solution::Shift2(std::size_t p, std::size_t q, std::size_t r, bool improve, std::size_t* m)
+bool Solution::Shift2(std::size_t p, std::size_t q, std::size_t r, bool improve, std::size_t* lb, std::size_t* ub)
 {
 	auto n = instance_ptr->GetSize();
 
@@ -508,7 +537,13 @@ bool Solution::Shift2(std::size_t p, std::size_t q, std::size_t r, bool improve,
 	if (r <= 0 || r >= n) return false;
 	if (p == q) return false;
 	if (p > q) std::swap(p, q);
-	if (m && std::max(p, q) < *m) return false;
+
+	auto const min = std::min(p, r);
+	auto const max = std::max(q, r);
+
+	/* Check lower and upper bounds */
+	if (lb && max < *lb) return false;
+	if (ub && min > *ub) return false;
 
 	if (r > q) {
 
@@ -550,6 +585,7 @@ bool Solution::Shift2(std::size_t p, std::size_t q, std::size_t r, bool improve,
 			std::next(begin(), p),
 			std::next(begin(), q + 1));
 
+		/* Update latency map */
 		recalculateLatencyMap(p);
 
 	} else if (r < p) {
@@ -592,6 +628,7 @@ bool Solution::Shift2(std::size_t p, std::size_t q, std::size_t r, bool improve,
 			std::next(begin(), p),
 			std::next(begin(), q + 1));
 
+		/* Update latency map */
 		recalculateLatencyMap(r);
 
 	} else {
@@ -600,6 +637,9 @@ bool Solution::Shift2(std::size_t p, std::size_t q, std::size_t r, bool improve,
 		return false;
 	}
 
-	if (m) *m = std::min(r, p) - 1;
+	/* Update lower and upper bounds */
+	if (lb) *lb = min - 1;
+	if (ub) *ub = max + 1;
+
 	return true;
 }

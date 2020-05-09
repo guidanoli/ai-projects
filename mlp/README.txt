@@ -16,6 +16,7 @@ Directory Structure
 	Data files
 	----------
 	Files used for storing data only.
+    Its path is assigned to the macro DATAPATH.
 
 ./include/x/
 	Header files
@@ -33,12 +34,24 @@ Directory Structure
 	Executable test source files.
 	Tests are targeted as xtest.
 
-./vis/x/
+./vis/app/
 	Graphical applications
 	----------------------
 	Source files for executables with some
 	graphical interface.
-	These are targeted as xvis.
+	These are targeted as xvisapp.
+
+./vis/src/
+	Graphical libraries source files
+	--------------------------------
+	Source files for libraries that interact
+    with OpenGL.
+    
+./vis/include/
+	Graphical libraries header files
+	--------------------------------
+	Header files for libraries that interact
+    with OpenGL.
 
 Libraries
 =========
@@ -47,6 +60,11 @@ A library named x has its source files located at
 src/x/ and its header files at include/x/. It can
 have a test executable located at tests/x/.
 Libraries are targeted as xlib.
+
+Graphical libraries are located in the vis/ directory
+and have their source files located at vis/src/x/
+and header files located at vis/include/x/.
+Graphical libraries are targeted as xvislib.
 
 Each library should contain a README file to
 document the code. Documenting in the code is
@@ -96,9 +114,19 @@ Adding...
 	  CMakeLists.txt file inside and there
 	  link them accordingly.
 
+    ...a graphical library
+	----------------------
+	- Create a folder in vis/src/.
+	- There, add at least one source file
+	- All header files must be in a folder
+	  with the same name in vis/include/.
+	- If it depends on any library, create
+	  a CMakeLists.txt file inside and there
+	  link them accordingly.
+
 	...a graphical application
 	--------------------------
-	- Create a folder in vis/.
+	- Create a folder in vis/app/.
 	- There, add at least one source file
 	- It will be automatically linked to the
 	  graphics libraries. But if there are

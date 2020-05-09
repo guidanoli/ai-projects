@@ -41,16 +41,17 @@ public:
 
 	// neighbourhood moves
 	// improve = must lower solution cost
-	// m = reference to upper bound
-	bool Shift (std::size_t p, std::size_t q, bool improve, std::size_t* m = nullptr);
-	bool Swap (std::size_t p, std::size_t q, bool improve, std::size_t* m = nullptr);
-	bool Opt2 (std::size_t p, std::size_t q, bool improve, std::size_t* m = nullptr);
-	bool Shift2 (std::size_t p, std::size_t q, std::size_t r, bool improve, std::size_t* m = nullptr);
+	// ub = reference to upper bound
+	bool Shift (std::size_t p, std::size_t q, bool improve, std::size_t* lb = nullptr, std::size_t* ub = nullptr);
+	bool Swap (std::size_t p, std::size_t q, bool improve, std::size_t* lb = nullptr, std::size_t* ub = nullptr);
+	bool Opt2 (std::size_t p, std::size_t q, bool improve, std::size_t* lb = nullptr, std::size_t* ub = nullptr);
+	bool Shift2 (std::size_t p, std::size_t q, std::size_t r, bool improve, std::size_t* lb = nullptr, std::size_t* ub = nullptr);
 
 	// for debugging
 	bool IsValid () const;
 	unsigned long long GetId () const;
 	void Print() const;
+	void PrintLatencyMap() const;
 
 	// crossover -- assumes solution come from the same instance
 	friend Solution* crossover(Solution const& sa, Solution const& sb,

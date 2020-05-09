@@ -1,18 +1,17 @@
-tsp2d
-=====
+tspvisapp
+=========
 
-Making use of OpenGL and (free)glut, I made this handy-dandy
-visualizer for tsp instances.
+TSP instance visualization.
+(see iparser and tspsollib)
 
-This is achived simply by plotting the nodes whose positions
-in the xy plane are contained in some instances files.
+* Works only for instances that contain DISPLAY_DATA_TYPE
+* Can plot solutions routes
+* Can plot populations (see tspgenlib)
+  * With the parameter --population
 
-Tested instances
-----------------
+For more information on command line arguments, be sure
+to query with the '--help' parameter:
 
-See images in this very directory.
+$ tspvisapp --help
 
-Future additions
-----------------
-
-* Visualize local searches iteractively
+For examples, see the images in this folder.
