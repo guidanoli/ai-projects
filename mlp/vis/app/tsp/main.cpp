@@ -28,13 +28,17 @@ class options_t
 public:
 	std::string ifile;
 	std::string sfile;
-	
+	std::size_t gammak = 0;
+
 	std::shared_ptr<AbstractPlotter> plotter;
 
 	float dotsize = 0, linesize = 0;
 	float dot_r = 0, dot_g = 0, dot_b = 0;
+	float h_dot_r = 0, h_dot_g = 0, h_dot_b = 0;
 	float line_r = 0, line_g = 0, line_b = 0;
-	float frame = 0;
+	double frame = 0;
+	bool highlight = false;
+	Node highlighted_node = 0;
 
 	bool population = false;
 	bool pop_verbose = false;
@@ -53,8 +57,12 @@ public:
 
 	void set_plotter_params(std::shared_ptr<InstancePlotter> plotter) {
 		plotter->SetDotColor(dot_r, dot_g, dot_b);
+		plotter->SetDotHighlightColor(h_dot_r, h_dot_g, h_dot_b);
 		plotter->SetDotSize(dotsize);
 		plotter->SetMargin(frame);
+
+		if (highlight)
+			plotter->HighlightGammaSet(highlighted_node);
 	}
 
 	void set_plotter_params(std::shared_ptr<SolutionPlotter> plotter) {
@@ -165,6 +173,9 @@ int main(int argc, char** argv)
 		.bind("sfile", &options_t::sfile,
 			arg::doc("TSP solution file"))
 
+		.bind("gamma-k", &options_t::gammak,
+			arg::doc("Gamma Set size"))
+
 		.bind("dotsize", &options_t::dotsize,
 			arg::doc("Vertex dot size"),
 			arg::def(5.0f))
@@ -180,6 +191,25 @@ int main(int argc, char** argv)
 		.bind("dot-b", &options_t::dot_b,
 			arg::doc("Vertex dot colour blue channel"),
 			arg::def(0.05f))
+
+		.bind("highlight-dot-r", &options_t::h_dot_r,
+			arg::doc("Highlighted vertex dot colour red channel"),
+			arg::def(0.98f))
+
+		.bind("highlight-dot-g", &options_t::h_dot_g,
+			arg::doc("Highlighted vertex dot colour green channel"),
+			arg::def(0.73f))
+
+		.bind("highlight-dot-b", &options_t::h_dot_b,
+			arg::doc("Highlighted vertex dot colour blue channel"),
+			arg::def(0.01f))
+
+		.bind("highlight", &options_t::highlight,
+			arg::doc("Hightlight neighbourhood of a given vertex"),
+			arg::def(false))
+
+		.bind("highlighted-node", &options_t::highlighted_node,
+			arg::doc("Highlighted node index"))
 
 		.bind("linesize", &options_t::linesize,
 			arg::doc("Route line size"),
@@ -300,6 +330,9 @@ int main(int argc, char** argv)
 	} else {
 		return 1;
 	}
+
+	if (options.gammak != 0)
+		instance_ptr->SetK(options.gammak);
 
 	if (!instance_ptr->GetPositionMatrix()) {
 		std::cerr << "No position matrix.\n";

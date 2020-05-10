@@ -1,4 +1,4 @@
 #pragma
 using Node = std::size_t;
-using Pos = float;
+using Pos = double;
 using Dist = int;

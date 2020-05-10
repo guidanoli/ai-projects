@@ -393,7 +393,7 @@ std::optional<SharedInstance> InstanceParser::Parse()
 	}
 
 	instance_ptr->filepath = filename;
-	instance_ptr->SetK(30);
+	instance_ptr->SetK(50);
 
 	return instance_ptr;
 

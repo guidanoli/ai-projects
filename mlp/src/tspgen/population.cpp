@@ -42,22 +42,25 @@ void Population::DoNextGeneration()
 		matingPool.push_back(btourn[firstIsBetter ? 0 : 1]);
 	}
 	/* BREEDING */
-	LocalSearch ls(rng);
 	for (std::size_t i = 1; i < matingPoolSize; i += 2) {
-		auto firstParent = at(i - 1), secondParent = at(i);
+		auto firstParent = matingPool[i - 1], secondParent = matingPool[i];
+		if (firstParent == secondParent) continue;
 		/* CROSSOVER */
 		auto offspring = std::shared_ptr<Solution>(
 			crossover(*firstParent, *secondParent, rng));
 		/* MUTATION */
-		if (rng() % 100 < mutation_chance * 100) {
+		std::uniform_real_distribution<double> mut_chance_unif(0);
+		if (mut_chance_unif(rng) < mutation_chance) {
 			std::uniform_real_distribution<double> unif(mutation_min, mutation_max);
-			double perturbationFactor = unif(rng);
-			auto instanceSize = offspring->GetInstance()->GetSize();
-			std::size_t perturbationSize = (std::size_t) (instanceSize * perturbationFactor);
+			double p = unif(rng);
+			auto n = offspring->GetInstance()->GetSize();
+			auto perturbationSize = std::max((std::size_t) (n * p), (std::size_t) 1);
+			LocalSearch ls(rng);
+			/* PERTURBATION */
 			ls.perturbSolution(*offspring, perturbationSize);
+			/* LOCAL SEARCH */
+			ls.findLocalMinimum(*offspring);
 		}
-		/* LOCAL SEARCH */
-		ls.findLocalMinimum(*offspring);
 		/* ADD OFFSPRING */
 		AddSolution(offspring);
 	}
@@ -66,20 +69,15 @@ void Population::DoNextGeneration()
 		/* REMOVAL OF CLONES */
 		std::set<std::size_t, std::greater<std::size_t>> clone_indexes;
 		for (std::size_t i = 0; i < size(); ++i)
-			for (std::size_t j = i + 1; j < size(); ++j) {
-				if (size() - clone_indexes.size() <= minSize)
-					goto stop_finding_clones;
+			for (std::size_t j = i + 1; j < size(); ++j)
 				if (*at(i) == *at(j))
 					clone_indexes.insert(j);
-			}
-stop_finding_clones:
 		for (auto const& index : clone_indexes)
 			RemoveSolution(index);
-
 		if (size() > minSize) {
 			/* REMOVAL OF THE WORSE */
 			auto order = [this] (std::size_t a, std::size_t b) {
-				return (a != b && GetSolutionCost(at(a)) > GetSolutionCost(at(b)))
+				return (a != b && cost_map.at(at(a)) > cost_map.at(at(b)))
 					|| (a == b && at(a)->GetId() < at(b)->GetId());
 			};
 			std::set<std::size_t, decltype(order)> ranking(order);

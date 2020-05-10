@@ -50,6 +50,7 @@ struct options_t
 	std::size_t gen_mating_pool_size = 0;
 	std::size_t gen_max_generations_sli = 0;
 	std::size_t gen_max_generations = 0;
+	double gen_mut_pmin = 0.0, gen_mut_pmax = 0.0, gen_mut = 0.0;
 	unsigned long long gen_max_seconds = 0;
 
 	std::string csvpath;
@@ -173,6 +174,9 @@ struct options_t
 				gen_minsize, gen_maxsize, gen_window, seed);
 			pop->SetVerbosity(verbose);
 			pop->SetMatingPoolSize(gen_mating_pool_size);
+			pop->SetMutationChance(gen_mut);
+			pop->SetMutationMin(gen_mut_pmin);
+			pop->SetMutationMax(gen_mut_pmax);
 			auto gen = Genetic(pop);
 			std::cout << "Starting GEN...\n";
 			auto status = gen.explore(
@@ -225,13 +229,16 @@ struct options_t
 			<< "Mating Pool Size" << gen_mating_pool_size << csv::nl
 			<< "Neighbourhood Window" << gen_window << csv::nl
 			<< "Population MIN" << gen_minsize << csv::nl
-			<< "Population MAX" << gen_maxsize << csv::nl;
+			<< "Population MAX" << gen_maxsize << csv::nl
+			<< "Mutation chance (%)" << gen_mut << csv::nl
+			<< "Mutation Perturbation Factor MIN (%)" << gen_mut_pmin << csv::nl
+			<< "Mutation Perturbation Factor MAX (%)" << gen_mut_pmax << csv::nl;
 	}
 
 	void write_csv_header() {
 		if (!csvWriter) return;
 		*csvWriter << "Seed" << seed << csv::nl
-			<< "Gamma K (0 = using default, 30)" << gammak << csv::nl
+			<< "Gamma K (0 = using default, 50)" << gammak << csv::nl
 			<< "Gap Threshhold" << gap_threshhold << csv::nl
 			<< "Instance" << "Gap (%)" << "Time (s)" << csv::nl;
 	}
@@ -300,7 +307,7 @@ int main(int argc, char** argv)
 		.bind("decay", &options_t::ils_decay_factor,
 			arg::doc("Decay factor. After this many iterations, the "
 			         "perturbation size decreases by ~63%."),
-			arg::def(8))
+			arg::def(32))
 
 		.bind("gamma-k", &options_t::gammak,
 			arg::doc("Gamma set size"))
@@ -311,11 +318,11 @@ int main(int argc, char** argv)
 		.bind("gen-window", &options_t::gen_window,
 			arg::doc("Window of neighbours in random greedy construction "
 			         "heuristic used in the genetic algorithm"),
-			arg::def(10))
+			arg::def(2))
 
 		.bind("gen-mating-pool-size", &options_t::gen_mating_pool_size,
 			arg::doc("Genetic algorithm mating pool size"),
-			arg::def(2))
+			arg::def(30))
 
 		.bind("gen-min-size", &options_t::gen_minsize,
 			arg::doc("Genetic algorithm minimum population size"),
@@ -323,12 +330,24 @@ int main(int argc, char** argv)
 
 		.bind("gen-max-size", &options_t::gen_maxsize,
 			arg::doc("Genetic algorithm maximum population size"),
-			arg::def(20))
+			arg::def(30))
 
 		.bind("gen-max-generations-sli", &options_t::gen_max_generations_sli,
 			arg::doc("Genetic algorithm maximum number of generations since "
 			         "last improved"),
-			arg::def(50))
+			arg::def(1000))
+
+		.bind("gen-mut-pmin", &options_t::gen_mut_pmin,
+			arg::doc("Genetic algorithm minimum perturbation magnitude"),
+			arg::def(0.0))
+
+		.bind("gen-mut-pmax", &options_t::gen_mut_pmax,
+			arg::doc("Genetic algorithm maximum perturbation magnitude"),
+			arg::def(0.05))
+
+		.bind("gen-mut", &options_t::gen_mut,
+			arg::doc("Genetic algorithm probability of mutation"),
+			arg::def(0.01))
 
 		.bind("gen-max-generations", &options_t::gen_max_generations,
 			arg::doc("Genetic algorithm maximum number of generations"))

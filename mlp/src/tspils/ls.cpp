@@ -156,18 +156,32 @@ void LocalSearch::perturbSolution(Solution& solution,
 			for (auto const& _j : j_order) {
 				auto nj = ni_neighbours[_j];
 				bool applied = false;
+				std::size_t size = 0;
 				auto j = solution.GetIndexOf(nj);
 				switch (neighbourhood_level) {
 				case 0:
+					size = 1;
 					applied = solution.Shift(i, j, false);
 					break;
 				case 1:
+					size = 2;
+					if (pertubationSize < size) continue;
 					applied = solution.Swap(i, j, false);
 					break;
 				case 2:
+					if (j > i)
+						size = j - i + 1;
+					else
+						size = i - j + 1;
+					if (pertubationSize < size) continue;
 					applied = solution.Opt2(i, j, false);
 					break;
 				case 3:
+					if (j > i)
+						size = j - i + 1;
+					else
+						size = i - j + 1;
+					if (pertubationSize < size) continue;
 					for (auto const& _r : r_order) {
 						auto nr = ni_neighbours[_r];
 						auto r = solution.GetIndexOf(nr);
@@ -180,7 +194,7 @@ void LocalSearch::perturbSolution(Solution& solution,
 					neighbourhood_level = (neighbourhood_level + 1) % 
 						                   neighbourhood_level_cnt;
 					perturbedOnce = true;
-					--pertubationSize;
+					pertubationSize -= size;
 					if (pertubationSize == 0)
 						goto ended_perturbation;
 				}
