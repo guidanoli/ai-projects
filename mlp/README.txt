@@ -16,7 +16,7 @@ Directory Structure
 	Data files
 	----------
 	Files used for storing data only.
-    Its path is assigned to the macro DATAPATH.
+	Its path is assigned to the macro DATAPATH.
 
 ./include/x/
 	Header files
@@ -44,14 +44,12 @@ Directory Structure
 ./vis/src/
 	Graphical libraries source files
 	--------------------------------
-	Source files for libraries that interact
-    with OpenGL.
+	Source files for libraries that interact with OpenGL.
     
 ./vis/include/
 	Graphical libraries header files
 	--------------------------------
-	Header files for libraries that interact
-    with OpenGL.
+	Header files for libraries that interact with OpenGL.
 
 Libraries
 =========
@@ -114,7 +112,7 @@ Adding...
 	  CMakeLists.txt file inside and there
 	  link them accordingly.
 
-    ...a graphical library
+	...a graphical library
 	----------------------
 	- Create a folder in vis/src/.
 	- There, add at least one source file

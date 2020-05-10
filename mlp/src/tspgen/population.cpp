@@ -43,7 +43,7 @@ void Population::DoNextGeneration()
 	}
 	/* BREEDING */
 	LocalSearch ls(rng);
-	for (std::size_t i = 1; i < matingPoolSize; ++i) {
+	for (std::size_t i = 1; i < matingPoolSize; i += 2) {
 		auto firstParent = at(i - 1), secondParent = at(i);
 		/* CROSSOVER */
 		auto offspring = std::shared_ptr<Solution>(

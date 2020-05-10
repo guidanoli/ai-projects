@@ -25,14 +25,11 @@ S = <s_0, s_1, ...., s_n>
 Initial solution
 ----------------
 
-The initial route is the one that visits the vertices in:
+The initial route is the one that visits the vertices in
+a greedy order, with a variable window size.
 
-* ascending order (1, ..., N-1) or,
-* in greedy order
-  * nearest neighbour (window = 1) --> used in ILS
-  * random neighbour from window > 1 --> used in GEN
-
-... which is determined by the 'greedy' parameter.
+* nearest neighbour (window = 1) --> used in ILS
+* random neighbour from window > 1 --> used in GEN
 
 Latency Map
 -----------
