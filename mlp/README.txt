@@ -131,3 +131,35 @@ Adding...
 	  any other dependencies, create a
 	  CMakeLists.txt file inside and there
 	  link them accordingly.
+
+Building...
+===========
+
+First, download a copy of CMake at cmake.org.
+Now, either launch the GUI program and setup
+the build system accordingly, or, more easily,
+open your preffered terminal in this folder and
+type the following commands:
+
+$ mkdir build
+$ cd build
+$ cmake ..
+
+If CMake isn't able to bind to graphical libraries
+(freeglut and OpenGL), be sure to use the debug
+flags to indicate their respective paths, eg:
+
+$ cmake .. -DOPENGL_LIBRARY_DIR=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.18362.0\um\x64
+
+Now, you can either use the built project (Makefile, VS solution...)
+or build it yourself through CMake like so (still in the build dir.):
+
+$ cmake --build .
+
+You can also specify which type of build you're planning to run:
+
+$ cmake --build . -C Debug
+
+or...
+
+$ cmake --build . -C Release
