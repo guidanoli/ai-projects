@@ -35,6 +35,8 @@ namespace flags
 		OTHER_INDO_EUROPEAN,
 		CHINESE,
 		ARABIC,
+		JAPANESE_TURKISH_FINNISH_MAGYAR,
+		OTHER,
 		NONE
 	};
 
@@ -60,6 +62,7 @@ namespace flags
 		WHITE,
 		BLACK,
 		ORANGE,
+		BROWN,
 		NONE
 	};
 

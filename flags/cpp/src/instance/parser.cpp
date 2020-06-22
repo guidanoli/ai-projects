@@ -7,24 +7,25 @@
 #include <iostream>
 
 using namespace flags;
+using namespace std;
 
 template<typename T>
-T convertField(std::string str) {
-	return T(std::stoi(str));
+T convertField(string str) {
+	return T(stoi(str));
 }
 
 template<>
-std::string convertField(std::string str) {
+string convertField(string str) {
 	return str;
 }
 
 template<>
-int convertField(std::string str) {
-	return std::stoi(str);
+int convertField(string str) {
+	return stoi(str);
 }
 
 template<>
-Colour convertField(std::string str) {
+Colour convertField(string str) {
 	if (str == "red")
 		return Colour::RED;
 	else if (str == "green")
@@ -39,63 +40,65 @@ Colour convertField(std::string str) {
 		return Colour::BLACK;
 	else if (str == "orange")
 		return Colour::ORANGE;
+	else if (str == "brown")
+		return Colour::BROWN;
 	return Colour::NONE;
 }
 
-void parseFields(std::list<std::string>& l) {}
+void parseFields(list<string>& l) {}
 
 template<class T, class... Args>
-void parseFields(std::list<std::string> &l, T& field, Args... args)
+void parseFields(list<string>& l, T* field, Args... args)
 {
-	field = convertField<T>(l.front());
+	*field = convertField<T>(l.front());
 	l.pop_front();
 	parseFields(l, args...);
 }
 
-std::ifstream& flags::operator>>(std::ifstream& fs, std::vector<Instance>& instances)
+ifstream& flags::operator>>(ifstream& fs, vector<Instance>& instances)
 {
-	std::string line;
-	while (std::getline(fs, line)) {
-		std::string field;
-		std::list<std::string> fields;
-		std::stringstream line_stream(line);
+	string line;
+	while (getline(fs, line)) {
+		string field;
+		list<string> fields;
+		stringstream line_stream(line);
 
-		while (std::getline(line_stream, field, ','))
+		while (getline(line_stream, field, ','))
 			fields.push_back(field);
 
 		Instance i;
 		parseFields(
 			fields,
-			i.name,
-			i.landmass,
-			i.zone,
-			i.area,
-			i.population,
-			i.language,
-			i.religion,
-			i.bars,
-			i.stripes,
-			i.colours,
-			i.red,
-			i.green,
-			i.blue,
-			i.gold,
-			i.white,
-			i.black,
-			i.orange,
-			i.mainhue,
-			i.circles,
-			i.crosses,
-			i.saltires,
-			i.quarters,
-			i.sunstars,
-			i.crescent,
-			i.triangle,
-			i.icon,
-			i.animate,
-			i.text,
-			i.topleft,
-			i.botright
+			&i.name,
+			&i.landmass,
+			&i.zone,
+			&i.area,
+			&i.population,
+			&i.language,
+			&i.religion,
+			&i.bars,
+			&i.stripes,
+			&i.colours,
+			&i.red,
+			&i.green,
+			&i.blue,
+			&i.gold,
+			&i.white,
+			&i.black,
+			&i.orange,
+			&i.mainhue,
+			&i.circles,
+			&i.crosses,
+			&i.saltires,
+			&i.quarters,
+			&i.sunstars,
+			&i.crescent,
+			&i.triangle,
+			&i.icon,
+			&i.animate,
+			&i.text,
+			&i.topleft,
+			&i.botright
 		);
 
 		instances.push_back(i);
