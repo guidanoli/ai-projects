@@ -66,6 +66,12 @@ namespace flags
 		NONE
 	};
 
+	struct strconsumer
+	{
+	public:
+		virtual void operator()(std::string const& str) = 0;
+	};
+
 	struct Instance
 	{
 		std::string name = "";
@@ -98,6 +104,9 @@ namespace flags
 		bool text = 0;
 		Colour topleft = Colour::NONE;
 		Colour botright = Colour::NONE;
+
+		void pretty() const;
+		void custom_pretty(strconsumer* consumer) const;
 	};
 
 }

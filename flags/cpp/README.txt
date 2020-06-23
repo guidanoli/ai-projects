@@ -1,6 +1,12 @@
 Directory Structure
 ===================
 
+./bind/x/
+    Binding libraries
+    -----------------
+    Binded C++ Libraries
+    Bindings are targeted as xbindlib.
+
 ./app/x/
 	Applications
 	------------
