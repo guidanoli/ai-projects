@@ -11,7 +11,12 @@ FOREACH(subdir ${SUBDIRS})
 		pybind11_add_module("${subdir}bindlib" "${${subdir}_SRC}")
         target_link_libraries("${subdir}bindlib" PRIVATE "${subdir}lib")
         set_target_properties(
-            ${target}
+            "${subdir}lib"
+            PROPERTIES
+                POSITION_INDEPENDENT_CODE ON
+        )
+        set_target_properties(
+            "${subdir}bindlib"
             PROPERTIES
                 PREFIX ""
                 DEBUG_POSTFIX "_d"

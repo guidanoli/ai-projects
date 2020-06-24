@@ -19,7 +19,7 @@ private:
 	std::string s;
 };
 
-PYBIND11_MODULE(instancebindlib, m)
+PYBIND11_MODULE(instance, m)
 {
 	py::enum_<Landmass>(m, "Landmass")
 		.value("NorthAmerica", Landmass::NORTH_AMERICA)

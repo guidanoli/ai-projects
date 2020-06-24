@@ -17,7 +17,7 @@ def __get_flags_root_dir():
     return str(file_path.parents[2])
 
 def __search_module(folder):
-    extension = (sys.platform == 'win32' and '.pyd' or '.so')
+    extension = (sys.platform == 'win32' and '.*.pyd' or '.*.so')
     name = get_pyd_name() + extension
     
     found = sorted(Path(folder).rglob(name))
@@ -31,11 +31,11 @@ def get_pyd_path():
     root = __get_flags_root_dir()
     module = __search_module(root)
     if not module:
-        raise ImportError('Módulo Python não encontrado em ' + root)
+        raise ImportError('Python module not found in ' + root)
     return module
 
 def get_pyd_name():
-    return 'instancebindlib'
+    return 'instance'
 
 del sys.modules[__name__]
 sys.modules[__name__] = ExtensionFileLoader(get_pyd_name(), get_pyd_path()).load_module()

@@ -12,7 +12,8 @@ FOREACH(subdir ${SUBDIRS})
         target_include_directories("${subdir}lib" PUBLIC
 			"${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/")
 		set_target_properties("${subdir}lib" PROPERTIES
-							  FOLDER libraries)
+                                      POSITION_INDEPENDENT_CODE ON
+				      FOLDER libraries)
 		FOREACH(SOURCE_FILE_PATH ${${subdir}_SRC})
 			string(REPLACE "${subdir}/" ""
 				SOURCE_FILE_NAME ${SOURCE_FILE_PATH})
