@@ -17,7 +17,7 @@ def __get_flags_root_dir():
     return str(file_path.parents[2])
 
 def __search_module(folder):
-    extension = (sys.platform == 'win32' and '.*.pyd' or '.*.so')
+    extension = (sys.platform == 'win32' and '.*pyd' or '.*so')
     name = get_pyd_name() + extension
     
     found = sorted(Path(folder).rglob(name))
