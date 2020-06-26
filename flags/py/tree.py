@@ -31,28 +31,63 @@ def instance2data(i):
 def instance2result(i):
     return int(i.religion)
 
+def il2x(il):
+    return list(map(instance2data, il))
+
+def il2y(il):
+    return list(map(instance2result, il))
+
+def il2xy(il):
+    return (il2x(il), il2y(il))
+
 data = instance.parse()
 
-ptcg_for_training = 1/2
-cnt_for_training = int(len(data) * ptcg_for_training)
+def fit_dataset(X, Y):
+    clf = tree.DecisionTreeClassifier()
+    clf = clf.fit(X, Y)
+    return clf
 
-training_data = data[:cnt_for_training]
-testing_data = data[cnt_for_training:]
+def split(l : list, k : int):
+    avg = len(l) / float(k)
+    out = []
+    last = 0.0
+    
+    while last < len(l):
+        out.append(l[int(last):int(last+avg)])
+        last += avg
 
-X = [instance2data(i) for i in training_data]
-Y = [instance2result(i) for i in training_data]
-clf = tree.DecisionTreeClassifier()
-clf = clf.fit(X, Y)
+    return out
 
-X_test = [instance2data(i) for i in testing_data]
-Y_test = [instance2result(i) for i in testing_data]
-Y_test_predict = clf.predict(X_test)
+def accuracy(expected, obtained):
+    return sum(1 for x,y in zip(expected, obtained)
+               if x == y) / len(expected)
 
-correct_predictions = 0
-for i in range(len(X_test)):
-    if Y_test[i] == Y_test_predict[i]:
-        correct_predictions += 1
+def test(training, testing):
+    clf = fit_dataset(*il2xy(training))
+    Yt = clf.predict(il2x(testing))
+    return accuracy(il2y(testing), Yt)
 
-print("#training = {}".format(len(training_data)))
-print("#testing = {}".format(len(testing_data)))
-print("accurracy = {}%".format(correct_predictions/len(X_test)))
+def mean(l : list):
+    return sum(l) / len(l)
+
+def k_fold(k : int):
+    chunks = split(data, k)
+    acc_list = []
+    for i in range(k):
+        training = chunks[:i] + chunks[i+1:]
+        training = sum(training, [])
+        testing = chunks[i]
+        acc = test(training, testing)
+        acc_list.append(acc)
+    return mean(acc_list)
+
+if __name__ == '__main__':
+    import sys
+    k = 10
+    for arg in sys.argv:
+        if '=' in arg:
+            key, val = arg.split('=')
+            if key == 'k':
+                k = int(val)
+    acc = k_fold(k)
+    print("acc = {:.2f}%".format(acc * 100))
