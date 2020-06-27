@@ -1,25 +1,18 @@
 ###############################################################################
 ##                                                                           ##
 ##  Decision Tree                                                            ##
-##  -------------                                                            ##
-##                                                                           ##
-##  Uses k-fold cross validation                                             ##
-##  Does not use attributes:                                                 ##
-##  * name (it's a string)                                                   ##
-##  * population                                                             ##
-##  * area                                                                   ##
-##  * religion (it's what we're trying to predict)                           ##
 ##                                                                           ##
 ###############################################################################
 
 import instance
 import analysis
+import random
 from sklearn import tree
 
 data = instance.parse()
 
 def get_data_labels():
-    not_labels = ['name', 'population', 'area', 'religion']
+    not_labels = ['name', 'religion']
     all_labels = analysis.get_fields()
     return [x for x in all_labels if x not in not_labels]
 
@@ -52,6 +45,8 @@ def fit_dataset(X, Y):
     return clf
 
 def split(l : list, k : int):
+    shuffled_l = l[:]
+    random.shuffle(shuffled_l)
     avg = len(l) / float(k)
     out = []
     last = 0.0

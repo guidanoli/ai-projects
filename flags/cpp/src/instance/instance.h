@@ -47,7 +47,7 @@ namespace flags
 		MUSLIM,
 		BUDDHIST,
 		HINDU,
-		ETHIC,
+		ETHNIC,
 		MARXIST,
 		OTHERS,
 		NONE

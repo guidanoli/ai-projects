@@ -56,7 +56,7 @@ PYBIND11_MODULE(instance, m)
 		.value("Muslim", Religion::MUSLIM)
 		.value("Buddhist", Religion::BUDDHIST)
 		.value("Hindu", Religion::HINDU)
-		.value("Ethic", Religion::ETHIC)
+		.value("Ethnic", Religion::ETHNIC)
 		.value("Marxist", Religion::MARXIST)
 		.value("Others", Religion::OTHERS)
 		.export_values();

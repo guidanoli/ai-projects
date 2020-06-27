@@ -92,8 +92,8 @@ string convertField(Religion const& field) {
 		return "buddhist";
 	case Religion::CATHOLIC:
 		return "catholic";
-	case Religion::ETHIC:
-		return "ethic";
+	case Religion::ETHNIC:
+		return "ethnic";
 	case Religion::HINDU:
 		return "hindu";
 	case Religion::MARXIST:
