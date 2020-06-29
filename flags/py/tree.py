@@ -6,8 +6,8 @@
 
 import instance
 import analysis
-import random
 from sklearn import tree
+import numpy as np
 
 # Flag data
 data = instance.parse()
@@ -37,11 +37,12 @@ def get_output_value_label(r : int) -> str:
     '''
     return instance.Religion(r).name
 
-def i2input(i : instance.Instance) -> list:
+def i2input(i : instance.Instance) -> np.array:
     '''
     Convert instance to input list.
     '''
-    return [int(getattr(i, a)) for a in data_labels]
+    gen = (getattr(i, a) for a in data_labels)
+    return np.fromiter(gen, np.int32)
 
 def i2output(i : instance.Instance) -> int:
     '''
@@ -82,6 +83,7 @@ def split(l : list, k : int) -> list:
     Split list into k equally sized chunks (list of lists)
     The list is first shuffled to avoid positional bias.
     '''
+    import random
     shuffled_l = l[:]
     random.shuffle(shuffled_l)
     avg = len(l) / float(k)
@@ -143,11 +145,19 @@ def mean_list(l : list) -> float:
     '''
     return sum(l) / len(l)
 
-def mean_dict(d : dict, k : int) -> dict:
+def mean_dict(dl : list) -> dict:
     '''
-    Divide the values of a dictionary by k
+    Obtain the mean values of a dictionary
     '''
-    return {key : value/k for key, value in d.items()}
+    n = len(dl)
+    out = dict()
+    for d in dl:
+        for k, v in d.items():
+            if k in out:
+                out[k] += v / n
+            else:
+                out[k] = v / n
+    return out
 
 def k_fold(k : int) -> tuple:
     '''
@@ -158,20 +168,17 @@ def k_fold(k : int) -> tuple:
     '''
     chunks = split(data, k)
     acc_list = list()
-    acc_per_result_dict = dict()
+    acc_per_result_list = list()
     for i in range(k):
+        testing = chunks[i]
         training = chunks[:i] + chunks[i+1:]
         training = sum(training, [])
-        testing = chunks[i]
         acc, acc_per_result = test(training, testing)
         acc_list.append(acc)
-        for key, value in acc_per_result.items():
-            if key in acc_per_result_dict:
-                acc_per_result_dict[key] += value
-            else:
-                acc_per_result_dict[key] = value
-    return mean_list(acc_list), mean_dict(acc_per_result_dict, k)
+        acc_per_result_list.append(acc_per_result)
+    return mean_list(acc_list), mean_dict(acc_per_result_list)
 
+## <python> <script> k=10
 if __name__ == '__main__':
     import sys
     k = 10

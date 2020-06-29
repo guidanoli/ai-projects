@@ -107,7 +107,8 @@ PYBIND11_MODULE(instance, m)
 			py_strconsumer consumer;
 			i.custom_pretty(&consumer);
 			return consumer.get_string();
-		});
+		})
+		.def("distance_from", &Instance::distance_from, py::arg("other"));
 
 	m.def("parse", [] (std::string file) {
 		std::vector<Instance> instances;

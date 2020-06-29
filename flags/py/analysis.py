@@ -1,12 +1,16 @@
 import instance
-import inspect
 
-def get_fields():
+def get_fields() -> list:
+    '''
+    Get instance fields (strings)
+    '''
+    import inspect
     members = list(map(lambda t: t[0],
         inspect.getmembers(instance.Instance,
             lambda a: not(inspect.isroutine(a)))))
     return [x for x in members if x[:2] != '__' and x[:-2] != '__']
 
+# <python> <script> select <column1> <column2> <...>
 if __name__ == '__main__':
     import sys
     data = instance.parse()

@@ -105,6 +105,7 @@ namespace flags
 		Colour topleft = Colour::NONE;
 		Colour botright = Colour::NONE;
 
+		double distance_from(Instance const& other);
 		void pretty() const;
 		void custom_pretty(strconsumer* consumer) const;
 	};
