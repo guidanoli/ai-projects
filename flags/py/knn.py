@@ -7,6 +7,7 @@
 import instance
 import utils
 import numpy as np
+import matplotlib.pyplot as plt
 
 class KNN(utils.Algorithm):
 
@@ -37,18 +38,44 @@ def get_max_expected_value():
     return max(list(map(lambda x: int(x),
         instance.Religion.__members__.values())))
 
+class KNNResult(object):
+
+    def __init__(self, k, confm):
+        self.k = k
+        self.confm = confm
+    
+    def get_k(self):
+        return self.k
+    
+    def get_confm(self):
+        return self.confm
+    
+    def get_accuracy(self):
+        return self.confm.get_accuracy()
+
+def plot_accuracy_versus_k(results):
+    accuracies = np.fromiter(map(lambda r: r.get_accuracy(), results), dtype=float)
+    ks = np.fromiter(map(lambda r: r.get_k(), results), dtype=int)
+    acc_max = np.max(accuracies)
+    k_acc_max, = np.where(accuracies == acc_max)
+    mask = accuracies == acc_max
+    print("maximum accurracy = {:.2f}% when k = {}".format(acc_max * 100, k_acc_max[0]))
+    color = np.where(mask, 'red', 'blue')
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(ks, accuracies, color=color)
+    plt.ticklabel_format(useOffset=False)
+    plt.plot(ks, accuracies)
+    plt.suptitle('Accuracy of KNN for different values of K')
+    plt.ylabel('Accuracy (%)')
+    plt.xlabel('K value')
+    plt.show()
+
 if __name__ == '__main__':
     data = instance.parse()
-    lowest = {'k': 0, 'acc': 0, 'confm': None}
+    results = list()
     for k in range(3, 50):
         confm = utils.k_fold(data, 10, KNN(k),
             get_expected_values, get_max_expected_value())
-        acc = confm.get_accuracy()
-        if acc > lowest['acc']:
-            lowest['acc'] = acc
-            lowest['k'] = k
-            lowest['confm'] = confm
-    print("accurracy = {:.2f}% for k = {}".format(lowest['acc'] * 100, lowest['k']))
-    lowest['confm'].plot(list(instance.Religion.__members__.keys()))
-    
-    
+        results.append(KNNResult(k, confm))
+    plot_accuracy_versus_k(results)

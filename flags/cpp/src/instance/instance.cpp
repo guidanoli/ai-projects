@@ -16,29 +16,29 @@ string convertField(T const& field) {
 
 template<>
 string convertField(string const& field) {
-	return field;
+	return "\"" + field + "\"";
 }
 
 template<>
 string convertField(bool const& field) {
-	return field ? "true" : "false";
+	return field ? "True" : "False";
 }
 
 template<>
 string convertField(Landmass const& field) {
 	switch (field) {
 	case Landmass::AFRICA:
-		return "africa";
+		return "Landmass.Africa";
 	case Landmass::ASIA:
-		return "asia";
+		return "Landmass.Asia";
 	case Landmass::EUROPE:
-		return "europe";
+		return "Landmass.Europe";
 	case Landmass::NORTH_AMERICA:
-		return "north america";
+		return "Landmass.NorthAmerica";
 	case Landmass::OCEANIA:
-		return "oceania";
+		return "Landmass.Oceania";
 	case Landmass::SOUTH_AMERICA:
-		return "south america";
+		return "Landmass.SouthAmerica";
 	default:
 		return "???";
 	}
@@ -48,13 +48,13 @@ template<>
 string convertField(Zone const& field) {
 	switch (field) {
 	case Zone::NE:
-		return "NE";
+		return "Zone.NE";
 	case Zone::NW:
-		return "NW";
+		return "Zone.NW";
 	case Zone::SE:
-		return "SE";
+		return "Zone.SE";
 	case Zone::SW:
-		return "SW";
+		return "Zone.SW";
 	default:
 		return "???";
 	}
@@ -64,25 +64,25 @@ template<>
 string convertField(Language const& field) {
 	switch (field) {
 	case Language::ARABIC:
-		return "arabic";
+		return "Language.Arabic";
 	case Language::CHINESE:
-		return "chinese";
+		return "Language.Chinese";
 	case Language::ENGLISH:
-		return "english";
+		return "Language.English";
 	case Language::FRENCH:
-		return "french";
+		return "Language.French";
 	case Language::GERMAN:
-		return "german";
+		return "Language.German";
 	case Language::OTHER_INDO_EUROPEAN:
-		return "other indo european";
+		return "Language.OtherIndoEuropean";
 	case Language::SLAVIC:
-		return "slavic";
+		return "Language.Slavic";
 	case Language::SPANISH:
-		return "spanish";
+		return "Language.Spanish";
 	case Language::JAPANESE_TURKISH_FINNISH_MAGYAR:
-		return "japanese/turkish/finnish/magyar";
+		return "Language.JapaneseTurkishFinnishMagyar";
 	case Language::OTHER:
-		return "other";
+		return "Language.Other";
 	default:
 		return "???";
 	}
@@ -92,21 +92,21 @@ template<>
 string convertField(Religion const& field) {
 	switch (field) {
 	case Religion::BUDDHIST:
-		return "buddhist";
+		return "Religion.Buddhist";
 	case Religion::CATHOLIC:
-		return "catholic";
+		return "Religion.Catholic";
 	case Religion::ETHNIC:
-		return "ethnic";
+		return "Religion.Ethnic";
 	case Religion::HINDU:
-		return "hindu";
+		return "Religion.Hindu";
 	case Religion::MARXIST:
-		return "marxist";
+		return "Religion.Marxist";
 	case Religion::MUSLIM:
-		return "muslim";
+		return "Religion.Muslim";
 	case Religion::OTHERS:
-		return "others";
+		return "Religion.Others";
 	case Religion::OTHER_CHRISTIAN:
-		return "other christian";
+		return "Religion.OtherChristian";
 	default:
 		return "???";
 	}
@@ -116,21 +116,21 @@ template<>
 string convertField(Colour const& field) {
 	switch (field) {
 	case Colour::RED:
-		return "red";
+		return "Colour.Red";
 	case Colour::GREEN:
-		return "green";
+		return "Colour.Green";
 	case Colour::BLUE:
-		return "blue";
+		return "Colour.Blue";
 	case Colour::WHITE:
-		return "white";
+		return "Colour.White";
 	case Colour::ORANGE:
-		return "orange";
+		return "Colour.Orange";
 	case Colour::BLACK:
-		return "black";
+		return "Colour.Black";
 	case Colour::GOLD:
-		return "gold";
+		return "Colour.Gold";
 	case Colour::BROWN:
-		return "brown";
+		return "Colour.Brown";
 	default:
 		return "???";
 	}
@@ -142,16 +142,17 @@ template<class T, class... Args>
 void print_instance_fields(strconsumer* consumer, Instance const& i,
 	const T& field, std::string fieldname, Args... args)
 {
+	(*consumer)("  ");
 	(*consumer)(fieldname);
-	(*consumer)(": ");
+	(*consumer)(" = ");
 	(*consumer)(convertField<T>(field));
-	(*consumer)(", ");
+	(*consumer)(",\n");
 	print_instance_fields(consumer, i, args...);
 }
 
 void Instance::custom_pretty(strconsumer* consumer) const
 {
-	(*consumer)("{");
+	(*consumer)("{\n");
 	print_instance_fields(consumer, *this,
 		name, "name",
 		landmass, "landmass",
@@ -181,8 +182,8 @@ void Instance::custom_pretty(strconsumer* consumer) const
 		icon, "icon",
 		animate, "animate",
 		text, "text",
-		topleft, "top left",
-		botright, "bottom right");
+		topleft, "topleft",
+		botright, "bottomright");
 	(*consumer)("}");
 }
 
@@ -211,10 +212,9 @@ template<>
 double field_distance(int t1, int t2, optional<int> max)
 {
 	double dt = (double) t1 - (double) t2;
-	dt *= dt;
 	if (max)
 		dt /= *max;
-	return dt;
+	return dt * dt;
 }
 
 double distance_accumulator(Instance const& i1, Instance const& i2) { return 0; }
