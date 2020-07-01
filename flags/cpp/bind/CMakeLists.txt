@@ -6,7 +6,7 @@ FOREACH(subdir ${SUBDIRS})
 	     CONFIGURE_DEPENDS
 		 "${subdir}/*.cpp"
          "${subdir}/*.h")
-	message(STATUS "src/${subdir}/")
+	message(STATUS "bind/${subdir}/")
 	if (NOT ("${${subdir}_SRC}" STREQUAL ""))
 		pybind11_add_module("${subdir}bindlib" "${${subdir}_SRC}")
         target_link_libraries("${subdir}bindlib" PRIVATE "${subdir}lib")
