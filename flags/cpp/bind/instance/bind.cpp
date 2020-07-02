@@ -1,5 +1,8 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+
+#include <vector>
 
 #include "instance.h"
 #include "parser.h"
@@ -7,17 +10,6 @@
 namespace py = pybind11;
 
 using namespace flags;
-
-struct py_strconsumer : public strconsumer
-{
-public:
-	void operator()(std::string const& str) override {
-		s += str;
-	}
-	std::string get_string() const { return s; }
-private:
-	std::string s;
-};
 
 PYBIND11_MODULE(instance, m)
 {
@@ -103,12 +95,22 @@ PYBIND11_MODULE(instance, m)
 		.def_readonly("text", &Instance::text)
 		.def_readonly("topleft", &Instance::topleft)
 		.def_readonly("botright", &Instance::botright)
-		.def("__str__", [] (Instance const& i) {
-			py_strconsumer consumer;
-			i.custom_pretty(&consumer);
-			return consumer.get_string();
+
+		.def("load_attr_values", [] (Instance const& i) {
+			auto arr = py::array_t<int>(Instance::get_attribute_count());
+			i.load_attributes(arr.mutable_data());
+			return arr;
 		})
+
 		.def("distance_from", &Instance::distance_from, py::arg("other"));
+
+	m.def("load_attr_labels", [] () {
+		auto vec = std::vector<std::string>();
+		auto size = Instance::get_attribute_count();
+		for (size_t i = 0; i < size; ++i)
+			vec.push_back(Instance::load_attribute_label(i));
+		return py::array(py::cast(vec));
+	});
 
 	m.def("parse", [] (std::string file) {
 		std::vector<Instance> instances;

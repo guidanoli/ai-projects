@@ -66,15 +66,9 @@ namespace flags
 		NONE
 	};
 
-	struct strconsumer
-	{
-	public:
-		virtual void operator()(std::string const& str) = 0;
-	};
-
 	struct Instance
 	{
-		std::string name = "";
+		std::string name = std::string();
 		Landmass landmass = Landmass::NONE;
 		Zone zone = Zone::NONE;
 		int area = 0;
@@ -105,9 +99,13 @@ namespace flags
 		Colour topleft = Colour::NONE;
 		Colour botright = Colour::NONE;
 
+		// Load instance data as integers
+		// p should have the size equivalent to 'get_attribute_count()'
+		void load_attributes(int* p) const;
+		static const char* load_attribute_label(size_t index);
+		static size_t get_attribute_count();
+
 		double distance_from(Instance const& other);
-		void pretty() const;
-		void custom_pretty(strconsumer* consumer) const;
 	};
 
 }
