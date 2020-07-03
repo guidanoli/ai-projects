@@ -38,82 +38,8 @@ static const char* attribute_labels[] = {
 	"animate",
 	"text",
 	"topleft",
-	"bottomright"
+	"botright"
 };
-
-// Hamming distance
-template<class T>
-double field_distance(T t1, T t2, optional<T> ref = nullopt)
-{
-	return t1 == t2 ? 0 : 1;
-}
-
-// Euclidean distance
-template<>
-double field_distance(int t1, int t2, optional<int> ref)
-{
-	double dt = (double) t1 - (double) t2;
-	if (ref)
-		dt /= *ref;
-	return dt * dt;
-}
-
-double distance_accumulator(Instance const& i1, Instance const& i2) { return 0; }
-
-template<class T, class... Args>
-double distance_accumulator(Instance const& i1, Instance const& i2,
-	T Instance::* field, T ref, Args... args)
-{
-	auto i1field = bind(field, i1);
-	auto i2field = bind(field, i2);
-	return field_distance(i1field(), i2field(), make_optional(ref)) +
-		distance_accumulator(i1, i2, args...);
-}
-
-template<class T, class... Args>
-double distance_accumulator(Instance const& i1, Instance const& i2,
-	T Instance::* field, Args... args)
-{
-	auto i1field = bind(field, i1);
-	auto i2field = bind(field, i2);
-	return field_distance(i1field(), i2field()) +
-		distance_accumulator(i1, i2, args...);
-}
-
-double Instance::distance_from(Instance const& other)
-{
-	double dist = distance_accumulator(*this, other,
-		&Instance::landmass,
-		&Instance::zone,
-		&Instance::area, 22402,
-		&Instance::population, 1008,
-		&Instance::language,
-		&Instance::bars, 5,
-		&Instance::stripes, 14,
-		&Instance::colours, 8,
-		&Instance::red,
-		&Instance::green,
-		&Instance::blue,
-		&Instance::gold,
-		&Instance::white,
-		&Instance::black,
-		&Instance::orange,
-		&Instance::mainhue,
-		&Instance::circles, 4,
-		&Instance::crosses, 2,
-		&Instance::saltires, 1,
-		&Instance::quarters, 4,
-		&Instance::sunstars, 50,
-		&Instance::crescent,
-		&Instance::triangle,
-		&Instance::icon,
-		&Instance::animate,
-		&Instance::text,
-		&Instance::topleft,
-		&Instance::botright);
-
-	return dist;
-}
 
 void intfy(Instance const& i, int *p) {}
 

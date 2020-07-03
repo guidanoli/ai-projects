@@ -78,7 +78,7 @@ PYBIND11_MODULE(instance, m)
 		.def_readonly("red", &Instance::red)
 		.def_readonly("green", &Instance::green)
 		.def_readonly("blue", &Instance::blue)
-		.def_readonly("gold", &Instance::area)
+		.def_readonly("gold", &Instance::gold)
 		.def_readonly("white", &Instance::white)
 		.def_readonly("black", &Instance::black)
 		.def_readonly("orange", &Instance::orange)
@@ -100,9 +100,7 @@ PYBIND11_MODULE(instance, m)
 			auto arr = py::array_t<int>(Instance::get_attribute_count());
 			i.load_attributes(arr.mutable_data());
 			return arr;
-		})
-
-		.def("distance_from", &Instance::distance_from, py::arg("other"));
+		});
 
 	m.def("load_attr_labels", [] () {
 		auto vec = std::vector<std::string>();

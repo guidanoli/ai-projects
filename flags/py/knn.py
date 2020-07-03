@@ -8,6 +8,7 @@ import instance
 import utils
 import numpy as np
 import matplotlib.pyplot as plt
+import operator
 
 class KNN(utils.Algorithm):
 
@@ -18,8 +19,8 @@ class KNN(utils.Algorithm):
         self.data = training_data
     
     def predict(self, testing_input) -> int:
-        import operator
-        distance_from_input = lambda i: i.distance_from(testing_input)
+        testing_input_x = utils.i2x(testing_input)
+        distance_from_input = lambda i: utils.hamming_distance(utils.i2x(i), testing_input_x)
         distances = np.fromiter(
             map(distance_from_input, self.data),
             dtype=float)

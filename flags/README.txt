@@ -86,7 +86,7 @@ How to build the binding "importbindlib" to Python
 
     Linux
     =====
-    /usr/bin/python38
+    /usr/bin/python3.8
 
 3. Now, compile everything with:
    $ cmake --build . --config Release

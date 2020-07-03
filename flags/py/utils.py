@@ -4,7 +4,9 @@
 ##                                                                           ##
 ###############################################################################
 
+import random
 import instance
+import matplotlib.pyplot as plt
 import numpy as np
 
 class Algorithm:
@@ -64,7 +66,6 @@ class ConfusionMatrix:
         return float(np.sum(np.diagonal(self.m))) / np.sum(self.m)
     
     def plot(self, labels) -> None:
-        import matplotlib.pyplot as plt
         fig = plt.figure()
         ax = fig.add_subplot(111)
         cax = ax.matshow(self.m, cmap='Greens')
@@ -78,7 +79,6 @@ def split(l : list, k : int) -> list:
     Split list into k equally sized chunks (list of lists)
     The list is first shuffled to avoid positional bias.
     '''
-    import random
     shuffled_l = l[:]
     random.shuffle(shuffled_l)
     avg = len(l) / float(k)
@@ -105,3 +105,71 @@ def k_fold(data : list, k : int, alg : Algorithm, get_expected, max_expected_val
         expected = get_expected(testing)
         confm.update(expected, predicted)
     return confm
+
+def i2x(i : instance.Instance) -> np.ndarray:
+    '''
+    Transforms an instance into an array of input attributes
+    '''
+    return i.load_attr_values()[_attr_map]
+
+def i2y(i : instance.Instance) -> int:
+    '''
+    Transforms an instance into the attribute to be predicted
+    '''
+    return i.load_attr_values()[_not_attr_map][0]
+
+def get_int_attr_labels(i : instance.Instance) -> np.ndarray:
+    is_int_label = (lambda l: type(getattr(i, l)) is int)
+    int_label_map = np.fromiter(map(is_int_label, _attr_labels), dtype=bool)
+    return _attr_labels[int_label_map]
+
+def get_max_int_attr_values(il : list) -> dict:
+    '''
+    Get maximum values for instance list
+    '''
+    d = dict()
+    for label in _attr_labels:
+        d[label] = None
+    for label in _int_labels:
+        max_val = 0
+        for i in il:
+            val = getattr(i, label)
+            if val > max_val:
+                max_val = val
+        d[label] = max_val
+    return d    
+
+def euclidean_distance(a, b) -> float:
+    '''
+    Euclidean distance
+    sum(|a_i - b_i|**2) [[int]]
+    sum(|a_i == b_i ? 0 : 1|) [[bool, enum]]
+    '''
+    diff = a - b
+    for i, label in np.ndenumerate(_attr_labels):
+        ref = _max_int_attr_values[label]
+        if ref is None:
+            # bool, enum
+            if diff[i]:
+                diff[i] = 1
+        else:
+            # int
+            diff[i] = np.square(diff[i]) / ref
+    return np.sum(diff)
+
+
+def hamming_distance(a, b) -> int:
+    '''
+    Hamming distance
+    sum(|a_i == b_i ? 0 : 1|)
+    '''
+    return np.sum(a != b)
+
+## Preprocessed data
+_data = instance.parse()
+_labels = instance.load_attr_labels()
+_attr_map = _labels != 'religion'
+_not_attr_map = ~_attr_map
+_attr_labels = _labels[_attr_map]
+_int_labels = get_int_attr_labels(_data[0])
+_max_int_attr_values = get_max_int_attr_values(_data)

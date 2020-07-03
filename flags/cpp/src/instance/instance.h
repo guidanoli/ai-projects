@@ -105,8 +105,6 @@ namespace flags
 
 		static const char* load_attribute_label(std::size_t index);
 		static std::size_t get_attribute_count();
-
-		double distance_from(Instance const& other);
 	};
 
 }
