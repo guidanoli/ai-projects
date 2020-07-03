@@ -102,11 +102,11 @@ PYBIND11_MODULE(instance, m)
 			return arr;
 		});
 
-	m.def("load_attr_labels", [] () {
+	m.def("load_attr_names", [] () {
 		auto vec = std::vector<std::string>();
 		auto size = Instance::get_attribute_count();
 		for (size_t i = 0; i < size; ++i)
-			vec.push_back(Instance::load_attribute_label(i));
+			vec.push_back(Instance::load_attribute_name(i));
 		return py::array(py::cast(vec));
 	});
 

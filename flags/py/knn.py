@@ -47,29 +47,63 @@ class KNN(utils.Algorithm):
         else:
             self.distance = self.distances['hamming']
     
-    def fit(self, training_data : list) -> None:
-        self.data = training_data
+    def fit(self, training_data : np.ndarray) -> None:
+        '''
+        Simply stores training data internally
+        '''
+        self.training_attrs = training_data[utils._attr_map]
+        self.training_labels = training_data[utils._label_map][0]
     
-    def predict(self, testing_input) -> int:
-        testing_input_x = utils.i2x(testing_input)
-        distance_from_input = lambda i: self.distance(utils.i2x(i), testing_input_x)
-        distances = np.fromiter(
-            map(distance_from_input, self.data),
-            dtype=float)
-        kclosest = list(
-            map(lambda i: self.data[i],
-                np.argpartition(distances, self.k)[:self.k]))
-        voting = {int(k): 0 for k in instance.Religion.__members__.values()}
-        for i in kclosest:
-            voting[int(i.religion)] += 1
-        return max(voting.items(), key=operator.itemgetter(1))[0]
-
-def get_expected_values(il : list) -> list:
-    return list(map(lambda i: int(i.religion), il))
-
-def get_max_expected_value():
-    return max(list(map(lambda x: int(x),
-        instance.Religion.__members__.values())))
+    def predict(self, testing_attrs : np.ndarray) -> np.ndarray:
+        '''
+        Predicts the label of testing data by the K nearest
+        neighbours in the training dataset (majority)
+        '''
+        
+        #
+        # distance matrix (MxN)
+        # ---------------------
+        # where [i,j] = distance between the i-th testing data
+        #               and the j-th training data
+        # where M = #testing, N = #training
+        #
+        distances = self.distance(testing_attrs[:,:,None],
+                                  self.training_attrs[:,None,:])
+        
+        #
+        # k closest neighbours (MxK)
+        # --------------------------
+        # where [i,j] = index of training data that is in the
+        #               set of the K nearest neighbours of the
+        #               i-th testing data
+        # where M = #testing, K = neighbourhood size
+        #
+        kclosest = np.argpartition(distances, self.k)[:,:self.k]
+        
+        #
+        # k closest neighbours' labels (MxK)
+        # ----------------------------------
+        # where [i,j] = label of training data that is in the
+        #               set of the K nearest neighbours of the
+        #               i-th testing data
+        # where M = #testing, K = neighbourhood size
+        #
+        kclosest_labels = self.training_labels[kclosest]
+        
+        #
+        # winning labels (M)
+        # ------------------
+        # where [i] = label assigned to the i-th testing data
+        #             for being the most common label between
+        #             its k closest neighbours
+        # where M = #testing
+        #
+        winning_labels = np.zeros(len(kclosest_labels), dtype=np.int32)
+        
+        for i, v in enumerate(kclosest_labels):
+            winning_labels[i] = np.bincount(v).argmax()
+        
+        return winning_labels
 
 class KNNResult(object):
 
@@ -108,7 +142,6 @@ if __name__ == '__main__':
     args = utils.get_command_line_arguments()
     results = list()
     for k in range(int(args.get('kmin', '3')), int(args.get('kmax', '50')) + 1):
-        confm = utils.k_fold(utils._data, int(args.get('kfoldk', '10')), KNN(k, **args),
-            get_expected_values, get_max_expected_value())
+        confm = utils.k_fold(int(args.get('kfoldk', '10')), KNN(k, **args))
         results.append(KNNResult(k, confm))
     plot_accuracy_versus_k(results)

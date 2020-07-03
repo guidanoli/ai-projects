@@ -103,7 +103,7 @@ namespace flags
 		// p should have the size equivalent to 'get_attribute_count()'
 		void load_attributes(int* p) const;
 
-		static const char* load_attribute_label(std::size_t index);
+		static const char* load_attribute_name(std::size_t index);
 		static std::size_t get_attribute_count();
 	};
 

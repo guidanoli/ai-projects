@@ -9,7 +9,7 @@
 using namespace flags;
 using namespace std;
 
-static const char* attribute_labels[] = {
+static const char* attribute_names[] = {
 	"landmass",
 	"zone",
 	"area",
@@ -85,12 +85,12 @@ void Instance::load_attributes(int* p) const
 		&Instance::botright);
 }
 
-const char* flags::Instance::load_attribute_label(size_t index)
+const char* flags::Instance::load_attribute_name(size_t index)
 {
-	return attribute_labels[index];
+	return attribute_names[index];
 }
 
 size_t Instance::get_attribute_count()
 {
-	return std::size(attribute_labels);
+	return std::size(attribute_names);
 }

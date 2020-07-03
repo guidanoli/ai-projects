@@ -16,24 +16,28 @@ class Algorithm:
     and tries to predict the output of new unknown input
     '''
 
-    def fit(self, training_data : list) -> None:
+    def fit(self, training_data : np.ndarray) -> None:
         '''
         Fit the model to the training data
         
         Argument:
-            training_data - list of instances
+            training_data - array of instance values
+                            training_data[:,i] = values of the i-th instance
+                            training_data[i,:] = i-th value of all instances
         '''
         pass
     
-    def predict(self, testing_input : instance.Instance) -> int:
+    def predict(self, testing_data : np.ndarray) -> np.ndarray:
         '''
         Try to predict the output for a given testing data
         
         Argument:
-            testing_input - input instance
+            testing_input - array of instance attributes
+                            training_data[:,i] = attributes of the i-th instance
+                            training_data[i,:] = i-th attribute of all instances
         
         Return:
-            predicted value
+            predicted values
         '''
         pass
 
@@ -44,9 +48,10 @@ class ConfusionMatrix:
     '''
 
     def __init__(self, n : int):
+        self.n = n
         self.m = np.zeros(shape=(n, n), dtype=np.int32)
     
-    def update(self, expected : list, predicted : list) -> None:
+    def update(self, expected : np.array, predicted : np.array) -> None:
         '''
         Updates confusion matrix
         1. expected and predicted must have the same size
@@ -57,8 +62,11 @@ class ConfusionMatrix:
             expected - expected output
             predicted - predicted output
         '''
-        for exp, pred in zip(expected, predicted):
-            self.m[exp][pred] += 1
+        size = len(expected)
+        h = np.zeros(shape=(size,self.n,self.n), dtype=np.int32)
+        h[np.arange(size), expected, predicted] += 1
+        hsum = np.sum(h, axis=0)
+        self.m += hsum
     
     def get_matrix(self) -> np.matrix:
         return self.m
@@ -66,75 +74,70 @@ class ConfusionMatrix:
     def get_accuracy(self) -> float:
         return float(np.sum(np.diagonal(self.m))) / np.sum(self.m)
     
-    def plot(self, labels) -> None:
+    def plot(self, names) -> None:
         fig = plt.figure()
         ax = fig.add_subplot(111)
         cax = ax.matshow(self.m, cmap='Greens')
         fig.colorbar(cax)
-        ax.set_xticklabels(['']+list(map(lambda name: name[:3] + '.',labels)))
-        ax.set_yticklabels(['']+labels)
+        ax.set_xticklabels(['']+list(map(lambda name: name[:3] + '.',names)))
+        ax.set_yticklabels(['']+names)
         plt.show()
 
-def split(l : list, k : int) -> list:
-    '''
-    Split list into k equally sized chunks (list of lists)
-    The list is first shuffled to avoid positional bias.
-    '''
-    shuffled_l = l[:]
-    random.shuffle(shuffled_l)
-    avg = len(l) / float(k)
-    out = []
-    last = 0.0
-    while last < len(l):
-        out.append(l[int(last):int(last+avg)])
-        last += avg
-    return out
-
-def k_fold(data : list, k : int, alg : Algorithm, get_expected, max_expected_value : int) -> tuple:
+def k_fold(k : int, alg : Algorithm) -> tuple:
     '''
     K-fold cross-validation algorithm
     where k is the number of chunks into which the data will be divided
     '''
-    confm = ConfusionMatrix(max_expected_value + 1)
-    chunks = split(data, k)
+    confm = ConfusionMatrix(_max_label_value + 1)
+    chunks = np.array_split(_matrix, k, axis=1)
     for i in range(k):
         testing = chunks[i]
-        training = chunks[:i] + chunks[i+1:]
-        training = sum(training, [])
+        training = np.concatenate(chunks[:i] + chunks[i+1:], axis=1)
         alg.fit(training)
-        predicted = list(map(alg.predict, testing))
-        expected = get_expected(testing)
+        predicted = alg.predict(testing[_attr_map])
+        expected = testing[_label_map][0,:]
         confm.update(expected, predicted)
     return confm
 
 def i2x(i : instance.Instance) -> np.ndarray:
     '''
-    Transforms an instance into an array of input attributes
+    Get attributes from instance
     '''
     return i.load_attr_values()[_attr_map]
 
 def i2y(i : instance.Instance) -> int:
     '''
-    Transforms an instance into the attribute to be predicted
+    Get label from instance
     '''
-    return i.load_attr_values()[_not_attr_map][0]
+    return i.load_attr_values()[_label_map]
 
 def get_int_attr_map(i : instance.Instance) -> np.ndarray:
     '''
     Get numpy boolean array that maps integer attributes
     '''
-    is_int_label = (lambda l: type(getattr(i, l)) is int)
-    return np.fromiter(map(is_int_label, _attr_labels), dtype=bool)
+    is_int_name = (lambda l: type(getattr(i, l)) is int)
+    return np.fromiter(map(is_int_name, _attr_names), dtype=bool)
 
-def get_max_int_attr_values(il : list) -> np.ndarray:
+def get_max_attr_values(m : np.ndarray) -> np.ndarray:
     '''
-    Get maximum values for instance list
+    Get maximum values for attributes
     '''
-    max_values = i2x(il[0])[_int_attr_map]
-    for i in il:
-        x = i2x(i)[_int_attr_map]
-        np.maximum(max_values, x, max_values)
-    return max_values
+    return np.max(_matrix[_attr_map], axis=1)
+
+def get_max_label_value(il : list) -> int:
+    '''
+    Get maximum value for label
+    '''
+    return np.max(_matrix[_label_map])
+
+def il2m(il : list) -> np.ndarray:
+    '''
+    Transform instance list to matrix
+    '''
+    m = np.zeros(shape=(len(_names), len(il)), dtype=np.int32)
+    for index, data in enumerate(il):
+        m[:, index] = data.load_attr_values()
+    return m
 
 def euclidean_distance(a, b) -> float:
     '''
@@ -143,16 +146,18 @@ def euclidean_distance(a, b) -> float:
     sum(|a_i == b_i ? 0 : 1|) [[bool, enum]]
     '''
     dab = a - b
-    return (np.linalg.norm(dab[_int_attr_map] / _max_int_attr_values) ** 2 +
-            np.sum(dab[~_int_attr_map] != 0))
+    dab_int_norm = np.apply_along_axis(np.divide, 0,
+                                       dab[_int_attr_map],
+                                       _max_int_attr_values)
+    dab_nint_sum = np.sum(dab[~_int_attr_map] != 0, axis=0)
+    return np.linalg.norm(dab_int_norm, axis=0) ** 2 + dab_nint_sum
 
 def hamming_distance(a, b) -> int:
     '''
     Hamming distance
     sum(|a_i == b_i ? 0 : 1|)
     '''
-    dab = a - b
-    return np.sum(dab != 0)
+    return np.sum((a - b) != 0, axis=0)
 
 def get_command_line_arguments():
     '''
@@ -186,20 +191,32 @@ def get_command_line_arguments():
 # Instance list
 _data = instance.parse()
 
-# Instance attribute labels
-_labels = instance.load_attr_labels()
+# Instance attribute names
+_names = instance.load_attr_names()
+
+# Instance matrix
+_matrix = il2m(_data)
+
+# Label name
+_label_name = 'religion'
+
+# Label mapping
+_label_map = _names == _label_name
 
 # Attribute mapping
-_attr_map = _labels != 'religion'
+_attr_map = ~_label_map
 
-# Not-Attribute mapping
-_not_attr_map = ~_attr_map
+# Attribute names
+_attr_names = _names[_attr_map]
 
-# Attribute labels
-_attr_labels = _labels[_attr_map]
-
-# Integer attribute labels
+# Integer attribute names
 _int_attr_map = get_int_attr_map(_data[0])
 
+# Maximum attribute values
+_max_attr_values = get_max_attr_values(_matrix)
+
+# Maximum label value
+_max_label_value = get_max_label_value(_matrix)
+
 # Maximum integer attribute values
-_max_int_attr_values = get_max_int_attr_values(_data)
+_max_int_attr_values = _max_attr_values[_int_attr_map]
