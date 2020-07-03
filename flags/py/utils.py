@@ -1,8 +1,9 @@
-###############################################################################
-##                                                                           ##
-##  Utility functions                                                        ##
-##                                                                           ##
-###############################################################################
+'''
+Utility functions and classes
+=============================
+
+Contains preprocessed data and handy-dandy functions and classes
+'''
 
 import random
 import instance
@@ -118,58 +119,87 @@ def i2y(i : instance.Instance) -> int:
     '''
     return i.load_attr_values()[_not_attr_map][0]
 
-def get_int_attr_labels(i : instance.Instance) -> np.ndarray:
+def get_int_attr_map(i : instance.Instance) -> np.ndarray:
+    '''
+    Get numpy boolean array that maps integer attributes
+    '''
     is_int_label = (lambda l: type(getattr(i, l)) is int)
-    int_label_map = np.fromiter(map(is_int_label, _attr_labels), dtype=bool)
-    return _attr_labels[int_label_map]
+    return np.fromiter(map(is_int_label, _attr_labels), dtype=bool)
 
-def get_max_int_attr_values(il : list) -> dict:
+def get_max_int_attr_values(il : list) -> np.ndarray:
     '''
     Get maximum values for instance list
     '''
-    d = dict()
-    for label in _attr_labels:
-        d[label] = None
-    for label in _int_labels:
-        max_val = 0
-        for i in il:
-            val = getattr(i, label)
-            if val > max_val:
-                max_val = val
-        d[label] = max_val
-    return d    
+    max_values = i2x(il[0])[_int_attr_map]
+    for i in il:
+        x = i2x(i)[_int_attr_map]
+        np.maximum(max_values, x, max_values)
+    return max_values
 
 def euclidean_distance(a, b) -> float:
     '''
     Euclidean distance
-    sum(|a_i - b_i|**2) [[int]]
+    sum(|a_i - b_i|**2) [[int, normalized]]
     sum(|a_i == b_i ? 0 : 1|) [[bool, enum]]
     '''
-    diff = a - b
-    for i, label in np.ndenumerate(_attr_labels):
-        ref = _max_int_attr_values[label]
-        if ref is None:
-            # bool, enum
-            if diff[i]:
-                diff[i] = 1
-        else:
-            # int
-            diff[i] = np.square(diff[i]) / ref
-    return np.sum(diff)
-
+    dab = a - b
+    return (np.linalg.norm(dab[_int_attr_map] / _max_int_attr_values) ** 2 +
+            np.sum(dab[~_int_attr_map] != 0))
 
 def hamming_distance(a, b) -> int:
     '''
     Hamming distance
     sum(|a_i == b_i ? 0 : 1|)
     '''
-    return np.sum(a != b)
+    dab = a - b
+    return np.sum(dab != 0)
+
+def get_command_line_arguments():
+    '''
+    Parses command line arguments
+    as containing two types of arguments
+    which are interpreted as the following
+    table shows.
+    
+    CMD line        dictionary (return)
+    -----------------------------------
+    --key=value     'key' : 'value'
+    --boolean       'boolean' : True
+    
+    The second column represents the dictionary
+    entries created from the command line arguments.
+    '''
+    from sys import argv
+    args = dict()
+    for arg in argv:
+        if '--' == arg[:2]:
+            arg = arg[2:]
+            if '=' in arg:
+                k, v = arg.split('=')
+                args[k] = v
+            else:
+                args[arg] = True
+    return args
 
 ## Preprocessed data
+
+# Instance list
 _data = instance.parse()
+
+# Instance attribute labels
 _labels = instance.load_attr_labels()
+
+# Attribute mapping
 _attr_map = _labels != 'religion'
+
+# Not-Attribute mapping
 _not_attr_map = ~_attr_map
+
+# Attribute labels
 _attr_labels = _labels[_attr_map]
-_int_labels = get_int_attr_labels(_data[0])
+
+# Integer attribute labels
+_int_attr_map = get_int_attr_map(_data[0])
+
+# Maximum integer attribute values
 _max_int_attr_values = get_max_int_attr_values(_data)

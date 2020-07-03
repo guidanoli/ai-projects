@@ -1,8 +1,29 @@
-###############################################################################
-##                                                                           ##
-##  K Nearest Neighbours                                                     ##
-##                                                                           ##
-###############################################################################
+'''
+K Nearest Neighbours
+====================
+
+Usage: <python> knn.py
+       [--dist=<str>]
+       [--kmin=<int>]
+       [--kmax=<int>]
+       [--kfoldk=<int>]
+
+    dist : distance criterion
+        * euclidean
+        * hamming (Default)
+    
+    kmin : minimum value for k for knn
+        kmin > 0
+        Default = 3
+   
+    kmax : maximum value for k for knn
+        kmax >= kmin
+        Default = 50
+    
+    kfoldk : k value for k-fold
+        1 < kfoldk <= 194
+        Default = 10
+'''
 
 import instance
 import utils
@@ -12,15 +33,26 @@ import operator
 
 class KNN(utils.Algorithm):
 
-    def __init__(self, k):
+    def __init__(self, k, **kwargs):
         self.k = k
+        self.distances = {
+            'hamming' : utils.hamming_distance,
+            'euclidean' : utils.euclidean_distance
+        }
+        if 'dist' in kwargs:
+            if kwargs['dist'] in self.distances:
+                self.distance = self.distances[kwargs['dist']]
+            else:
+                raise Exception("Distance '{}' not supported".format(kwargs['dist']))
+        else:
+            self.distance = self.distances['hamming']
     
     def fit(self, training_data : list) -> None:
         self.data = training_data
     
     def predict(self, testing_input) -> int:
         testing_input_x = utils.i2x(testing_input)
-        distance_from_input = lambda i: utils.hamming_distance(utils.i2x(i), testing_input_x)
+        distance_from_input = lambda i: self.distance(utils.i2x(i), testing_input_x)
         distances = np.fromiter(
             map(distance_from_input, self.data),
             dtype=float)
@@ -73,10 +105,10 @@ def plot_accuracy_versus_k(results):
     plt.show()
 
 if __name__ == '__main__':
-    data = instance.parse()
+    args = utils.get_command_line_arguments()
     results = list()
-    for k in range(3, 50):
-        confm = utils.k_fold(data, 10, KNN(k),
+    for k in range(int(args.get('kmin', '3')), int(args.get('kmax', '50')) + 1):
+        confm = utils.k_fold(utils._data, int(args.get('kfoldk', '10')), KNN(k, **args),
             get_expected_values, get_max_expected_value())
         results.append(KNNResult(k, confm))
     plot_accuracy_versus_k(results)
