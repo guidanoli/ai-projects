@@ -102,8 +102,9 @@ namespace flags
 		// Load instance data as integers
 		// p should have the size equivalent to 'get_attribute_count()'
 		void load_attributes(int* p) const;
-		static const char* load_attribute_label(size_t index);
-		static size_t get_attribute_count();
+
+		static const char* load_attribute_label(std::size_t index);
+		static std::size_t get_attribute_count();
 
 		double distance_from(Instance const& other);
 	};

@@ -59,7 +59,7 @@ def plot_accuracy_versus_k(results):
     acc_max = np.max(accuracies)
     k_acc_max, = np.where(accuracies == acc_max)
     mask = accuracies == acc_max
-    print("maximum accurracy = {:.2f}% when k = {}".format(acc_max * 100, k_acc_max[0]))
+    print("maximum accurracy = {:.2f}% when k = {}".format(acc_max * 100, ks[k_acc_max[0]]))
     color = np.where(mask, 'red', 'blue')
     fig = plt.figure()
     ax = fig.add_subplot(111)

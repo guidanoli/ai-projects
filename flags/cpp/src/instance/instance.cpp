@@ -45,16 +45,16 @@ static const char* attribute_labels[] = {
 template<class T>
 double field_distance(T t1, T t2, optional<T> ref = nullopt)
 {
-	return (t1 == t2) ? 0 : 1;
+	return t1 == t2 ? 0 : 1;
 }
 
 // Euclidean distance
 template<>
-double field_distance(int t1, int t2, optional<int> max)
+double field_distance(int t1, int t2, optional<int> ref)
 {
 	double dt = (double) t1 - (double) t2;
-	if (max)
-		dt /= *max;
+	if (ref)
+		dt /= *ref;
 	return dt * dt;
 }
 
@@ -112,7 +112,7 @@ double Instance::distance_from(Instance const& other)
 		&Instance::topleft,
 		&Instance::botright);
 
-	return std::sqrt(dist);
+	return dist;
 }
 
 void intfy(Instance const& i, int *p) {}

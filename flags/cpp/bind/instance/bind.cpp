@@ -114,7 +114,7 @@ PYBIND11_MODULE(instance, m)
 
 	m.def("parse", [] (std::string file) {
 		std::vector<Instance> instances;
-		std::ifstream fs(file);
+		auto fs = std::ifstream(file);
 		fs >> instances;
 		return instances;
 	}, py::arg("filepath") = std::string(DATAPATH) + "/flag.data");
