@@ -159,6 +159,36 @@ def hamming_distance(a, b) -> int:
     '''
     return np.sum((a - b) != 0, axis=0)
 
+def get_labels(arr : np.ndarray) -> np.ndarray:
+    '''
+    Returns array of labels
+    '''
+    return arr[_label_map][0]
+
+def gini_impurity(label_occurrences : dict) -> float:
+    '''
+    Returns gini impurity of the set discribed by label_occurrences
+    '''
+    total = sum(label_occurrences.values())
+    gini = 0
+    for label in label_occurrences:
+        gini+= (label_occurrences.get(label,0)/total)**2
+    return 1-gini
+
+def entropy(label_occurrences : dict) -> float:
+    '''
+    Returns entropy of the set discribed by label_occurrences
+    '''
+    total = sum(label_occurrences.values())
+    entropy = 0
+    for label in label_occurrences:
+        frac = (label_occurrences.get(label,0)/total)
+        if(frac != 0):
+            entropy+= frac* np.log2(frac)
+        
+    return -entropy
+
+
 def get_command_line_arguments():
     '''
     Parses command line arguments
