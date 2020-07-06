@@ -1,9 +1,9 @@
 #pragma once
 
-#include <fstream>
-#include <vector>
+#include <fstream> // std::ifstream
+#include <vector> // std::vector
 
-#include "instance.h"
+#include "instance.h" // Instance
 
 namespace flags
 {

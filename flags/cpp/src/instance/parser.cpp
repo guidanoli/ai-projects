@@ -1,10 +1,8 @@
 #include "parser.h"
 
-#include <list>
-#include <string>
-#include <sstream>
-
-#include <iostream>
+#include <list> // std::list
+#include <string> // std::string
+#include <sstream> // std::stringstream
 
 using namespace flags;
 using namespace std;

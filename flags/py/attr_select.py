@@ -20,6 +20,7 @@ Usage: <python> attr_select.py
             return 0
         
         * knn (Default)
+        * decision_tree
     
     ... : arguments passed to specific argument
 '''
@@ -45,7 +46,9 @@ if __name__ == '__main__':
     alg = kwargs.get('alg', 'knn')
     m = importlib.import_module(alg)
     f = getattr(m, alg)
-    acc_max, *_ = f(**kwargs)
+    acc_max = f(**kwargs)
+    if type(acc_max) is tuple:
+        acc_max = acc_max[0]
     improved_i = 0
     unused_attrs = np.zeros(len(all_attrs), dtype=bool)
     while True:
@@ -55,7 +58,9 @@ if __name__ == '__main__':
                 continue
             unused_attrs[i] = True
             set_unused_attrs(unused_attrs)
-            acc, *_ = f(**kwargs)
+            acc = f(**kwargs)
+            if type(acc) is tuple:
+                acc = acc[0]
             if acc > acc_max:
                 print("{:.2f}% @ attrs \\ {}".format(acc_max * 100, all_attrs[unused_attrs]))
                 improved = True

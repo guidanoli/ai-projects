@@ -255,9 +255,9 @@ class DecisionTree(utils.Algorithm):
                 
                 return result
 
-def decision_tree(maxDepth, purityMeasure, minForSplit):
-    decision_tree = DecisionTree(int(args.get("maxDepth",100)),args.get("purityMeasure","entropy"),int(args.get("minForSplit",2)))
-    confm = utils.k_fold(int(args.get('kfoldk', '10')), decision_tree)
+def decision_tree(**kwargs):
+    decision_tree = DecisionTree(int(kwargs.get("maxDepth",100)),kwargs.get("purityMeasure","entropy"),int(kwargs.get("minForSplit",2)))
+    confm = utils.k_fold(int(kwargs.get('kfoldk', '10')), decision_tree)
     return confm.get_accuracy()
 
 

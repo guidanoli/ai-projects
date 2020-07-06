@@ -1,11 +1,11 @@
-#include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
-#include <pybind11/stl.h>
+#include <pybind11/pybind11.h> // py::module, py::enum_, py::class_, ...
+#include <pybind11/numpy.h> // py::array_t
+#include <pybind11/stl.h> // std::vector casting
 
-#include <vector>
+#include <vector> // std::vector
 
-#include "instance.h"
-#include "parser.h"
+#include "instance.h" // Instance & field enumerations
+#include "parser.h" // Parsing data file operator
 
 namespace py = pybind11;
 

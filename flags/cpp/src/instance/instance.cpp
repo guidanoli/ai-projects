@@ -1,10 +1,6 @@
 #include "instance.h"
 
-#include <string>
-#include <iostream>
-#include <cmath>
-#include <functional>
-#include <optional>
+#include <functional> // std::bind
 
 using namespace flags;
 using namespace std;
