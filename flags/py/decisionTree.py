@@ -53,7 +53,7 @@ class DecisionTree(utils.Algorithm):
             raise Exception("minForSplit must be greater than 1, is {}".format(min_for_split))
 
     
-    def buildTree(self,training_data,parent = None):
+    def build_tree(self,training_data,parent = None):
         '''
         Builds the decision tree recursively
         '''
@@ -113,7 +113,12 @@ class DecisionTree(utils.Algorithm):
             best_mean_impurity = np.Inf
             best_attr = ""
             for (index,attr) in enumerate(utils._attr_names):
-
+                
+                #
+                # Attribute view of training data (N)
+                # -------------------------------
+                # where attr_selection[i] = training_data[attribute index][i]
+                #
                 attr_selection = training_data[utils._attr_map][index,...]
 
                 mean_impurity = 0
@@ -163,7 +168,9 @@ class DecisionTree(utils.Algorithm):
                     else:
                         best_attr_max = utils._max_attr_values[index]
 
-
+            #
+            # Register chosen attribute
+            #
             self.attr_name = best_attr_name
             self.attr_index = best_attr_index
             self.is_numerical = is_best_attr_numerical
@@ -173,18 +180,18 @@ class DecisionTree(utils.Algorithm):
                 self.max_value=best_attr_max
 
             #
-            # Call recursively for children nodes
+            # Call recursively for child nodes
             #
             self.children = []
             if(self.is_numerical):
                 self.children.append(DecisionTree(self.max_depth-1,self.purity_measure,self.min_for_split))
                 self.children.append(DecisionTree(self.max_depth-1,self.purity_measure,self.min_for_split))
-                self.children[0].buildTree(training_data[:,training_data[utils._attr_map][self.attr_index,...] <= self.best_split],self)
-                self.children[1].buildTree(training_data[:,training_data[utils._attr_map][self.attr_index,...] > self.best_split],self)
+                self.children[0].build_tree(training_data[:,training_data[utils._attr_map][self.attr_index,...] <= self.best_split],self)
+                self.children[1].build_tree(training_data[:,training_data[utils._attr_map][self.attr_index,...] > self.best_split],self)
             else:
                 for val in range(self.max_value + 1):
                     self.children.append(DecisionTree(self.max_depth-1,self.purity_measure,self.min_for_split))
-                    self.children[-1].buildTree(training_data[:,training_data[utils._attr_map][self.attr_index,...] == val],self)
+                    self.children[-1].build_tree(training_data[:,training_data[utils._attr_map][self.attr_index,...] == val],self)
             
             return self
 
@@ -194,7 +201,7 @@ class DecisionTree(utils.Algorithm):
         '''
         Calls the tree building function
         '''
-        self.buildTree(training_data)
+        self.build_tree(training_data)
         return
 
     def predict(self, testing_data : np.ndarray) -> np.ndarray:
@@ -203,16 +210,25 @@ class DecisionTree(utils.Algorithm):
         '''
         if(self.is_leaf):
             return np.zeros(testing_data.shape[1],dtype=int)+self.label
+
         else:
             result = np.zeros(testing_data.shape[1],dtype=int)
 
+            #
+            # Attribute view of testing data (N)
+            # -------------------------------
+            # where attr_selection[i] = testing_data[attribute index][i]
+            #
             attr_view = testing_data[self.attr_index,...]
+
             if(self.is_numerical):
                 criteria_map = attr_view<=self.best_split
                 less = self.children[0].predict(testing_data[:,criteria_map])
                 more = self.children[1].predict(testing_data[:,~criteria_map])
 
-                
+                #
+                # Reonstruct label array from both child partitions(less and more)
+                #
                 less_counter = 0
                 more_counter = 0
                 for i in range(len(criteria_map)):
@@ -229,16 +245,24 @@ class DecisionTree(utils.Algorithm):
                 for val,node in enumerate(self.children):
                     child_results.append(node.predict(testing_data[:,attr_view == val]))
                     child_counters[val]=0
+
+                #
+                # Reonstruct label array from the partitions of each child
+                #
                 for (i,val) in enumerate(attr_view):
                     result[i]=child_results[val][child_counters[val]]
                     child_counters[val]+=1
                 
                 return result
 
+def decision_tree(maxDepth, purityMeasure, minForSplit):
+    decision_tree = DecisionTree(int(args.get("maxDepth",100)),args.get("purityMeasure","entropy"),int(args.get("minForSplit",2)))
+    confm = utils.k_fold(int(args.get('kfoldk', '10')), decision_tree)
+    return confm.get_accuracy()
+
 
 
 if __name__ == '__main__':
     args = utils.get_command_line_arguments()
-    decision_tree = DecisionTree(int(args.get("maxDepth",100)),args.get("purityMeasure","entropy"),int(args.get("minForSplit",2)))
-    confm = utils.k_fold(int(args.get('kfoldk', '10')), decision_tree)
-    print(confm)
+    tree = DecisionTree(int(args.get("maxDepth",100)),args.get("purityMeasure","entropy"),int(args.get("minForSplit",2)))
+    confm = utils.k_fold(int(args.get('kfoldk', '10')), tree)
