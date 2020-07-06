@@ -53,7 +53,7 @@ class DecisionTree(utils.Algorithm):
             raise Exception("minForSplit must be greater than 1, is {}".format(min_for_split))
 
     
-    def build_tree(self,training_data,parent = None):
+    def build_tree(self,training_data, unused_attributes, parent = None):
         '''
         Builds the decision tree recursively
         '''
@@ -113,7 +113,12 @@ class DecisionTree(utils.Algorithm):
             best_mean_impurity = np.Inf
             best_attr = ""
             for (index,attr) in enumerate(utils._attr_names):
-                
+                #
+                # Skip over attributes that were already used
+                #
+                if(not unused_attributes[index]):
+                    continue
+
                 #
                 # Attribute view of training data (N)
                 # -------------------------------
@@ -179,6 +184,8 @@ class DecisionTree(utils.Algorithm):
             else:
                 self.max_value=best_attr_max
 
+            new_unused = unused_attributes.copy()
+            new_unused[self.attr_index] = False
             #
             # Call recursively for child nodes
             #
@@ -186,12 +193,17 @@ class DecisionTree(utils.Algorithm):
             if(self.is_numerical):
                 self.children.append(DecisionTree(self.max_depth-1,self.purity_measure,self.min_for_split))
                 self.children.append(DecisionTree(self.max_depth-1,self.purity_measure,self.min_for_split))
-                self.children[0].build_tree(training_data[:,training_data[utils._attr_map][self.attr_index,...] <= self.best_split],self)
-                self.children[1].build_tree(training_data[:,training_data[utils._attr_map][self.attr_index,...] > self.best_split],self)
+
+                self.children[0].build_tree(training_data[:,training_data[utils._attr_map][self.attr_index,...] <= self.best_split],
+                new_unused, self)
+                self.children[1].build_tree(training_data[:,training_data[utils._attr_map][self.attr_index,...] > self.best_split],
+                new_unused, self)
+
             else:
                 for val in range(self.max_value + 1):
                     self.children.append(DecisionTree(self.max_depth-1,self.purity_measure,self.min_for_split))
-                    self.children[-1].build_tree(training_data[:,training_data[utils._attr_map][self.attr_index,...] == val],self)
+                    self.children[-1].build_tree(training_data[:,training_data[utils._attr_map][self.attr_index,...] == val],
+                    new_unused, self)
             
             return self
 
@@ -201,7 +213,7 @@ class DecisionTree(utils.Algorithm):
         '''
         Calls the tree building function
         '''
-        self.build_tree(training_data)
+        self.build_tree(training_data,np.full(utils._attr_names.shape,dtype=bool))
         return
 
     def predict(self, testing_data : np.ndarray) -> np.ndarray:
