@@ -5,6 +5,7 @@ Utility functions and classes
 Contains preprocessed data and handy-dandy functions and classes
 '''
 
+import os
 import random
 import instance
 import matplotlib.pyplot as plt
@@ -186,6 +187,14 @@ def get_command_line_arguments():
                 args[arg] = True
     return args
 
+def get_unused_attrs():
+    fpath = 'unused_attrs.txt'
+    if not os.path.isfile(fpath):
+        return []
+    with open(fpath, 'r') as f:
+        text = f.read()
+        return text.split('\n')
+
 ## Preprocessed data
 
 # Instance list
@@ -203,8 +212,15 @@ _label_name = 'religion'
 # Label mapping
 _label_map = _names == _label_name
 
+# Unused attribute labels
+_unused_attr_labels = get_unused_attrs()
+
+# Unused attribute mapping
+_unused_attr_map = np.fromiter((x in _unused_attr_labels
+                                for x in _names), dtype=bool)
+
 # Attribute mapping
-_attr_map = ~_label_map
+_attr_map = ~_label_map & ~_unused_attr_map
 
 # Attribute names
 _attr_names = _names[_attr_map]

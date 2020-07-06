@@ -7,6 +7,8 @@ Usage: <python> knn.py
        [--kmin=<int>]
        [--kmax=<int>]
        [--kfoldk=<int>]
+       [--plot]
+       [--supress-io]
 
     dist : distance criterion
         * euclidean
@@ -23,6 +25,12 @@ Usage: <python> knn.py
     kfoldk : k value for k-fold
         1 < kfoldk <= 194
         Default = 10
+    
+    plot : plot accuracy versus k graph
+        Default = False
+    
+    supress-io : supress IO calls
+        Default = False
 '''
 
 import instance
@@ -120,13 +128,10 @@ class KNNResult(object):
     def get_accuracy(self):
         return self.confm.get_accuracy()
 
-def plot_accuracy_versus_k(results):
-    accuracies = np.fromiter(map(lambda r: r.get_accuracy(), results), dtype=float)
-    ks = np.fromiter(map(lambda r: r.get_k(), results), dtype=int)
-    acc_max = np.max(accuracies)
-    k_acc_max, = np.where(accuracies == acc_max)
+def plot_accuracy_versus_k(accuracies, ks, acc_max=None):
+    if acc_max is None:
+        acc_max = np.max(accuracies)
     mask = accuracies == acc_max
-    print("maximum accurracy = {:.2f}% when k = {}".format(acc_max * 100, ks[k_acc_max[0]]))
     color = np.where(mask, 'red', 'blue')
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -138,10 +143,29 @@ def plot_accuracy_versus_k(results):
     plt.xlabel('K value')
     plt.show()
 
-if __name__ == '__main__':
-    args = utils.get_command_line_arguments()
+def knn(*args, **kwargs):
+    '''
+    Run KNN with different K values and return:
+    
+        - the maximum accuracy obtained
+        - the k for which such accuracy was reached
+    '''
     results = list()
-    for k in range(int(args.get('kmin', '3')), int(args.get('kmax', '50')) + 1):
-        confm = utils.k_fold(int(args.get('kfoldk', '10')), KNN(k, **args))
+    for k in range(int(kwargs.get('kmin', '3')), int(kwargs.get('kmax', '50')) + 1):
+        confm = utils.k_fold(int(kwargs.get('kfoldk', '10')), KNN(k, **kwargs))
         results.append(KNNResult(k, confm))
-    plot_accuracy_versus_k(results)
+    accuracies = np.fromiter(map(lambda r: r.get_accuracy(), results), dtype=float)
+    ks = np.fromiter(map(lambda r: r.get_k(), results), dtype=int)
+    acc_max = np.max(accuracies)
+    k_acc_max_index, = np.where(accuracies == acc_max)
+    mask = accuracies == acc_max
+    k_acc_max = ks[k_acc_max_index[0]]
+    if 'plot' in kwargs:
+        plot_accuracy_versus_k(accuracies, ks, acc_max)
+    return acc_max, k_acc_max
+
+if __name__ == '__main__':
+    kwargs = utils.get_command_line_arguments()
+    acc_max, k_acc_max = knn(**kwargs)
+    if 'supress-io' not in kwargs:
+        print("{:.2f}% @ k = {}".format(acc_max * 100, k_acc_max))
