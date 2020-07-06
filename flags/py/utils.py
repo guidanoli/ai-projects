@@ -10,6 +10,7 @@ import random
 import instance
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 class Algorithm:
     '''
@@ -84,20 +85,36 @@ class ConfusionMatrix:
         ax.set_yticklabels(['']+names)
         plt.show()
 
-def k_fold(k : int, alg : Algorithm) -> tuple:
+def k_fold(k : int, alg : Algorithm, time_steps : bool = False) -> tuple:
     '''
     K-fold cross-validation algorithm
     where k is the number of chunks into which the data will be divided
+    You can time the fitting and predicting steps with time_steps = True
     '''
     confm = ConfusionMatrix(_max_label_value + 1)
     chunks = np.array_split(_matrix, k, axis=1)
+    if time_steps:
+        fitting = []
+        predicting = []
     for i in range(k):
         testing = chunks[i]
         training = np.concatenate(chunks[:i] + chunks[i+1:], axis=1)
+        if time_steps:
+            start = time.time()
         alg.fit(training)
+        if time_steps:
+            end = time.time()
+            fitting.append(end-start)
+            start = time.time()
         predicted = alg.predict(testing[_attr_map])
+        if time_steps:
+            end = time.time()
+            predicting.append(end-start)
         expected = testing[_label_map][0,:]
         confm.update(expected, predicted)
+    if time_steps:
+        print("Fitting = {}".format(sum(fitting) / k))
+        print("Predicting = {}".format(sum(predicting) / k))
     return confm
 
 def i2x(i : instance.Instance) -> np.ndarray:

@@ -62,7 +62,7 @@ if __name__ == '__main__':
             if type(acc) is tuple:
                 acc = acc[0]
             if acc > acc_max:
-                print("{:.2f}% @ attrs \\ {}".format(acc_max * 100, all_attrs[unused_attrs]))
+                print("{:.2f}% @ attrs \\ {}".format(acc * 100, all_attrs[unused_attrs]))
                 improved = True
                 acc_max = acc
                 improved_i = i
@@ -70,6 +70,7 @@ if __name__ == '__main__':
         if not improved:
             break
         unused_attrs[improved_i] = True
+    set_unused_attrs(unused_attrs)
     print("Done")
     
         

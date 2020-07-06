@@ -9,6 +9,7 @@ Usage: <python> knn.py
        [--kfoldk=<int>]
        [--plot]
        [--supress-io]
+       [--time]
 
     dist : distance criterion
         * euclidean
@@ -31,6 +32,9 @@ Usage: <python> knn.py
     
     supress-io : supress IO calls
         Default = False
+    
+    time : time fitting and prediction time
+        Default = false
 '''
 
 import instance
@@ -152,7 +156,9 @@ def knn(*args, **kwargs):
     '''
     results = list()
     for k in range(int(kwargs.get('kmin', '3')), int(kwargs.get('kmax', '50')) + 1):
-        confm = utils.k_fold(int(kwargs.get('kfoldk', '10')), KNN(k, **kwargs))
+        confm = utils.k_fold(int(kwargs.get('kfoldk', '10')),
+                             KNN(k, **kwargs),
+                             kwargs.get('time', False))
         results.append(KNNResult(k, confm))
     accuracies = np.fromiter(map(lambda r: r.get_accuracy(), results), dtype=float)
     ks = np.fromiter(map(lambda r: r.get_k(), results), dtype=int)
