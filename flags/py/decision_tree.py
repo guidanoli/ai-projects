@@ -185,7 +185,8 @@ class DecisionTree(utils.Algorithm):
                 self.max_value=best_attr_max
 
             new_unused = unused_attributes.copy()
-            new_unused[self.attr_index] = False
+            if(not self.is_numerical):
+                new_unused[self.attr_index] = False
             #
             # Call recursively for child nodes
             #
@@ -213,7 +214,7 @@ class DecisionTree(utils.Algorithm):
         '''
         Calls the tree building function
         '''
-        self.build_tree(training_data,np.full(utils._attr_names.shape,dtype=bool))
+        self.build_tree(training_data,np.full(utils._attr_names.shape,True,dtype=bool))
         return
 
     def predict(self, testing_data : np.ndarray) -> np.ndarray:
@@ -269,7 +270,7 @@ class DecisionTree(utils.Algorithm):
 
 def decision_tree(**kwargs):
     decision_tree = DecisionTree(int(kwargs.get("maxDepth",100)),kwargs.get("purityMeasure","entropy"),int(kwargs.get("minForSplit",2)))
-    confm = utils.k_fold(int(kwargs.get('kfoldk', '10')), decision_tree)
+    confm = utils.k_fold(int(kwargs.get('kfoldk', '10')), decision_tree, time_fitting=True, time_predicting=True)
     return confm.get_accuracy()
 
 
