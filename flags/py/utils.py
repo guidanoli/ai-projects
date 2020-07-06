@@ -85,7 +85,7 @@ class ConfusionMatrix:
         ax.set_yticklabels(['']+names)
         plt.show()
 
-def k_fold(k : int, alg : Algorithm, time_steps : bool = False) -> tuple:
+def k_fold(k : int, alg : Algorithm, time_fitting : bool = False, time_predicting : bool = False) -> tuple:
     '''
     K-fold cross-validation algorithm
     where k is the number of chunks into which the data will be divided
@@ -93,28 +93,31 @@ def k_fold(k : int, alg : Algorithm, time_steps : bool = False) -> tuple:
     '''
     confm = ConfusionMatrix(_max_label_value + 1)
     chunks = np.array_split(_matrix, k, axis=1)
-    if time_steps:
-        fitting = []
-        predicting = []
+    if time_fitting:
+        fitting = 0
+    if time_predicting:
+        predicting = 0
     for i in range(k):
         testing = chunks[i]
         training = np.concatenate(chunks[:i] + chunks[i+1:], axis=1)
-        if time_steps:
+        if time_fitting:
             start = time.time()
         alg.fit(training)
-        if time_steps:
+        if time_fitting:
             end = time.time()
-            fitting.append(end-start)
+            fitting += end-start
+        if time_predicting:
             start = time.time()
         predicted = alg.predict(testing[_attr_map])
-        if time_steps:
+        if time_predicting:
             end = time.time()
-            predicting.append(end-start)
+            predicting += end-start
         expected = testing[_label_map][0,:]
         confm.update(expected, predicted)
-    if time_steps:
-        print("Fitting = {}".format(sum(fitting) / k))
-        print("Predicting = {}".format(sum(predicting) / k))
+    if time_fitting:
+        print("fitting = {}".format(fitting))
+    if time_predicting:
+        print("predicting = {}".format(predicting))
     return confm
 
 def i2x(i : instance.Instance) -> np.ndarray:
