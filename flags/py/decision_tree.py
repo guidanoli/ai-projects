@@ -76,7 +76,8 @@ class DecisionTree(utils.Algorithm):
         if(instance_counts == Counter([])):
             self.label=parent.label
             self.is_leaf = True
-            self.entropy = 0
+            self.impurity = 0
+            self.examples = 0
             return self
 
         #
@@ -89,7 +90,7 @@ class DecisionTree(utils.Algorithm):
         #
         self.impurity = self.purity_function(instance_counts)
 
-
+        self.examples=training_data.shape[1]
 
         if((instance_counts[self.label] == training_data.shape[1]) or # all instances in this node have the same label
             ((training_data).shape[1]<self.min_for_split) or          # node has too few instances to split
@@ -180,6 +181,16 @@ class DecisionTree(utils.Algorithm):
                         best_attr_max = utils._max_attr_values[index]
 
             #
+            # Check if split is an improvement
+            #
+            if(self.impurity <= best_mean_impurity):
+                #
+                # This is a leaf node
+                #
+                self.is_leaf = True
+                return self
+
+            #
             # Register chosen attribute
             #
             self.attr_name = best_attr_name
@@ -193,6 +204,7 @@ class DecisionTree(utils.Algorithm):
             new_unused = unused_attributes.copy()
             if(not self.is_numerical):
                 new_unused[self.attr_index] = False
+
             #
             # Call recursively for child nodes
             #
@@ -282,15 +294,51 @@ class DecisionTree(utils.Algorithm):
             children_depths.append(c.get_depth())
         return max(children_depths)+1
 
+    def draw(self, tabs=0):
+        if(self.is_leaf):
+            print("---"*tabs,"(","label: ",self.label,"examples: ",self.examples,"impurity: ",self.impurity,")")
+        else:
+            if(self.is_numerical):
+                print("---"*tabs,"(","attr: ",self.attr_name,"spliValue: ",self.best_split,"impurity: ",self.impurity,")")
+            else:
+                print("---"*tabs,"(","attr: ",self.attr_name,"impurity: ",self.impurity,")")
+            for c in self.children:
+                c.draw(tabs+1)
+
 def decision_tree(**kwargs):
     decision_tree = DecisionTree(int(kwargs.get("maxDepth",100)),kwargs.get("purityMeasure","entropy"),int(kwargs.get("minForSplit",2)))
-    confm = utils.k_fold(int(kwargs.get('kfoldk', '10')), decision_tree, time_fitting=True, time_predicting=True)
-    return confm.get_accuracy(),decision_tree.get_depth()
+    confm = utils.k_fold(int(kwargs.get('kfoldk', '10')), decision_tree)
+    return confm.get_accuracy()
 
+def my_plot(arr1, name1, arr2, name2):
 
+    arr1_max = np.max(arr1)
+    mask = arr1 == arr1_max
+    color = np.where(mask, 'red', 'blue')
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(arr2, arr1, color=color)
+    plt.ticklabel_format(useOffset=False)
+    plt.plot(arr2, arr1)
+    plt.ylabel(name1)
+    plt.xlabel(name2)
+    plt.show()
 
 if __name__ == '__main__':
     args = utils.get_command_line_arguments()
-    tree = DecisionTree(int(args.get("maxDepth",100)),args.get("purityMeasure","entropy"),int(args.get("minForSplit",2)))
-    confm = utils.k_fold(int(args.get('kfoldk', '10')), tree, time_fitting=True, time_predicting=True)
-    print(confm.get_accuracy(),tree.get_depth())
+    if("plots" in args):
+        dep=[]
+        minF=[] 
+        acc=[]
+        for i in range(2,21):
+            minForSplit=i     
+            tree=DecisionTree(100,args.get("purityMeasure","entropy"),minForSplit)
+            confm=utils.k_fold(10,tree)
+            minF.append(i)
+            dep.append(tree.get_depth())
+            acc.append(confm.get_accuracy())
+        my_plot(np.array(dep),"Altura",np.array(minF),"minForSplit")
+    else:        
+        tree = DecisionTree(int(args.get("maxDepth",100)),args.get("purityMeasure","entropy"),int(args.get("minForSplit",2)))
+        confm = utils.k_fold(int(args.get('kfoldk', '10')), tree, time_fitting=True, time_predicting=True)
+        print(confm.get_accuracy(),tree.get_depth())
