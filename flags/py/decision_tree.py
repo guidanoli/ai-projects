@@ -139,14 +139,18 @@ class DecisionTree(utils.Algorithm):
                     best_split_point = -1
 
                     for attr_value in np.unique(attr_selection):
-                        mean_impurity = self.purity_function(Counter(utils.get_labels(training_data[:,attr_selection <= attr_value])))
-                        mean_impurity+= self.purity_function(Counter(utils.get_labels(training_data[:,attr_selection > attr_value])))
+                        this_partition = training_data[:,attr_selection <= attr_value]
+                        other_partition = training_data[:,attr_selection < attr_value]
+
+                        mean_impurity = self.purity_function(Counter(utils.get_labels(this_partition))) * this_partition.shape[1]
+                        mean_impurity+= self.purity_function(Counter(utils.get_labels(other_partition))) * other_partition.shape[1]
 
                         if(mean_impurity<best_split_impurity):
                             best_split_impurity = mean_impurity
                             best_split_point = attr_value
 
                     partitions=2
+                    mean_impurity = best_split_impurity
                     
                 else:
                     #
@@ -156,10 +160,12 @@ class DecisionTree(utils.Algorithm):
 
                     for attr_value in range(utils._max_attr_values[index]+1):
                         partitions+= 1
-                        mean_impurity+= self.purity_function(Counter(utils.get_labels(training_data[:,attr_selection == attr_value])))
+                        this_partition = training_data[:,attr_selection == attr_value]
+                        this_impurity = self.purity_function(Counter(utils.get_labels(this_partition)))
+                        mean_impurity+= this_impurity * this_partition.shape[1]
 
 
-                mean_impurity/= partitions
+                mean_impurity/= (partitions * training_data.shape[1])
                 if(mean_impurity < best_mean_impurity):
                     #
                     # Update current best attribute
@@ -268,14 +274,23 @@ class DecisionTree(utils.Algorithm):
                 
                 return result
 
+    def get_depth(self):
+        if(self.is_leaf):
+            return 1
+        children_depths=[]
+        for c in self.children:
+            children_depths.append(c.get_depth())
+        return max(children_depths)+1
+
 def decision_tree(**kwargs):
     decision_tree = DecisionTree(int(kwargs.get("maxDepth",100)),kwargs.get("purityMeasure","entropy"),int(kwargs.get("minForSplit",2)))
     confm = utils.k_fold(int(kwargs.get('kfoldk', '10')), decision_tree, time_fitting=True, time_predicting=True)
-    return confm.get_accuracy()
+    return confm.get_accuracy(),decision_tree.get_depth()
 
 
 
 if __name__ == '__main__':
     args = utils.get_command_line_arguments()
     tree = DecisionTree(int(args.get("maxDepth",100)),args.get("purityMeasure","entropy"),int(args.get("minForSplit",2)))
-    confm = utils.k_fold(int(args.get('kfoldk', '10')), tree)
+    confm = utils.k_fold(int(args.get('kfoldk', '10')), tree, time_fitting=True, time_predicting=True)
+    print(confm.get_accuracy(),tree.get_depth())

@@ -33,3 +33,4 @@
 
 # Misc
 flags/py/.vscode/.ropeproject/config.py
+flags/py/unused_attrs.txt
