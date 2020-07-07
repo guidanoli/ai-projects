@@ -165,7 +165,7 @@ class DecisionTree(utils.Algorithm):
                         mean_impurity+= this_impurity * this_partition.shape[1]
 
 
-                mean_impurity/= (partitions * training_data.shape[1])
+                mean_impurity/= (training_data.shape[1])
                 if(mean_impurity < best_mean_impurity):
                     #
                     # Update current best attribute
