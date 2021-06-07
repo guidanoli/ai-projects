@@ -13,13 +13,20 @@ Source
 
 Dataset "Flags" from UCI: https://archive.ics.uci.edu/ml/datasets/Flags
 
+Reports and Presentations
+-------------------------
+
+See the [report](Flags.pdf) and [slides](Flags_Slides.pdf) in Portuguese.
+
 How to build the binding "importbindlib" to Python
 --------------------------------------------------
 
 0. Make sure there is a flags/ext/pybind11 folder with a bunch of files there.
    If not, you should pull the repository recursively with:
-   
-   $ git clone --recursive <git repo URL>
+ 
+```sh
+git clone --recursive <git repo URL>
+```
    
 1. Get yourself a copy of the latest version of CMake
 
@@ -28,17 +35,19 @@ How to build the binding "importbindlib" to Python
        all based on these CMakeLists.txt that tell him what and how to build
        libraries and executables. An essential tool for C/C++ developers.
 
-   Windows
-   =======
-   - Go to https://cmake.org/
-   - Click on 'Download'
-   - Go for the Installer
-   - Install it and don't forget to add it to PATH
+```
+Windows
+=======
+- Go to https://cmake.org/
+- Click on 'Download'
+- Go for the Installer
+- Install it and don't forget to add it to PATH
 
-   Linux
-   =====
-   - Install through your favourite package manager (might be outdated)
-   - or compile the source code (read https://askubuntu.com/a/865294)
+Linux
+=====
+- Install through your favourite package manager (might be outdated)
+- or compile the source code (read https://askubuntu.com/a/865294)
+```
 
 2. On your favourite terminal, open it in this very directory (flags/) and write:
 
@@ -52,7 +61,15 @@ How to build the binding "importbindlib" to Python
    
    - make sure you have the Python debug libraries installed [see footnote 1]
    - specify which Python libraries and headers to work with [see footnote 2]
+
+3. Now, compile everything with:
+   $ cmake --build . --config Release
    
+4. Done! Now you can import the module by calling "import instance" in flags/py.
+
+Footnotes
+---------
+
 [1] By default, Python doesn't come with all the resources we'll need to
     build Python extension modules. That's why we should download the
     developer version of the language.
@@ -76,9 +93,13 @@ How to build the binding "importbindlib" to Python
     If you use python3.X:
     $ sudo apt install python3.X-dev
 
-[2] Specify which Python version you'll be using with:
-    $ cmake -DPYTHON_EXECUTABLE:FILEPATH=### ..
-    Where ### is the path to your Python executable, eg:
+[2] Specify which Python version you'll be using with
+   
+```sh
+cmake -DPYTHON_EXECUTABLE:FILEPATH=### ..
+```
+
+   Where ### is the path to your Python executable, eg:
 
     Windows
     =======
@@ -87,8 +108,3 @@ How to build the binding "importbindlib" to Python
     Linux
     =====
     /usr/bin/python3.8
-
-3. Now, compile everything with:
-   $ cmake --build . --config Release
-   
-4. Done! Now you can import the module by calling "import instance" in flags/py.
