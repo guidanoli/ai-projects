@@ -1,6 +1,7 @@
 Directory Structure
 ===================
 
+```
 ./app/x/
 	Applications
 	------------
@@ -50,6 +51,7 @@ Directory Structure
 	Graphical libraries header files
 	--------------------------------
 	Header files for libraries that interact with OpenGL.
+```
 
 Libraries
 =========
@@ -81,56 +83,56 @@ appropriate libraries to your target.
 Adding...
 =========
 
-	...a library
-	------------
-	- Create a folder in src/.
-	- There, add at least one source file
-	- All header files must be in a folder
-	  with the same name in include/.
-	- All test source files must be in a
-	  folder with the same name in tests/.
-	- If it depends on any library, create
-	  a CMakeLists.txt file inside and there
-	  link them accordingly.
+...a library
+------------
+- Create a folder in src/.
+- There, add at least one source file
+- All header files must be in a folder
+  with the same name in include/.
+- All test source files must be in a
+  folder with the same name in tests/.
+- If it depends on any library, create
+  a CMakeLists.txt file inside and there
+  link them accordingly.
 
-	...an application
-	-----------------
-	- Create a folder in app/.
-	- There, add at least one source file
-	- If it depends on any library, create
-	  a CMakeLists.txt file inside and there
-	  link them accordingly.
-	
-	...a test
-	---------
-	- Create a folder in tests/ named after
-	  the library you want to test.
-	- There, add at least one source file.
-	- It will be automatically linked to the
-	  library being test. But if there are
-	  any other dependencies, create a
-	  CMakeLists.txt file inside and there
-	  link them accordingly.
+...an application
+-----------------
+- Create a folder in app/.
+- There, add at least one source file
+- If it depends on any library, create
+  a CMakeLists.txt file inside and there
+  link them accordingly.
 
-	...a graphical library
-	----------------------
-	- Create a folder in vis/src/.
-	- There, add at least one source file
-	- All header files must be in a folder
-	  with the same name in vis/include/.
-	- If it depends on any library, create
-	  a CMakeLists.txt file inside and there
-	  link them accordingly.
+...a test
+---------
+- Create a folder in tests/ named after
+  the library you want to test.
+- There, add at least one source file.
+- It will be automatically linked to the
+  library being test. But if there are
+  any other dependencies, create a
+  CMakeLists.txt file inside and there
+  link them accordingly.
 
-	...a graphical application
-	--------------------------
-	- Create a folder in vis/app/.
-	- There, add at least one source file
-	- It will be automatically linked to the
-	  graphics libraries. But if there are
-	  any other dependencies, create a
-	  CMakeLists.txt file inside and there
-	  link them accordingly.
+...a graphical library
+----------------------
+- Create a folder in vis/src/.
+- There, add at least one source file
+- All header files must be in a folder
+  with the same name in vis/include/.
+- If it depends on any library, create
+  a CMakeLists.txt file inside and there
+  link them accordingly.
+
+...a graphical application
+--------------------------
+- Create a folder in vis/app/.
+- There, add at least one source file
+- It will be automatically linked to the
+  graphics libraries. But if there are
+  any other dependencies, create a
+  CMakeLists.txt file inside and there
+  link them accordingly.
 
 Building...
 ===========
@@ -141,25 +143,35 @@ the build system accordingly, or, more easily,
 open your preffered terminal in this folder and
 type the following commands:
 
-$ mkdir build
-$ cd build
-$ cmake ..
+```sh
+mkdir build
+cd build
+cmake ..
+```
 
 If CMake isn't able to bind to graphical libraries
 (freeglut and OpenGL), be sure to use the debug
 flags to indicate their respective paths, eg:
 
-$ cmake .. -DOPENGL_LIBRARY_DIR=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.18362.0\um\x64
+```sh
+cmake .. -DOPENGL_LIBRARY_DIR=C:\Program Files (x86)\Windows Kits\10\Lib\10.0.18362.0\um\x64
+```
 
 Now, you can either use the built project (Makefile, VS solution...)
 or build it yourself through CMake like so (still in the build dir.):
 
-$ cmake --build .
+```sh
+cmake --build .
+```
 
 You can also specify which type of build you're planning to run:
 
-$ cmake --build . -C Debug
+```sh
+cmake --build . -C Debug
+```
 
 or...
 
-$ cmake --build . -C Release
+```sh
+cmake --build . -C Release
+```
